@@ -4,111 +4,211 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kawaii Diet - Diario Alimentare</title>
+    <link rel="manifest" href="manifest.json"> 
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f9;
+        /* 💖 Nuova palette Cartoon Kawaii */
+        :root {
+            --kawaii-pink: #F7B6D8; /* Rosa Antico */
+            --kawaii-green: #C8E6C9; /* Verde Pastello */
+            --kawaii-soft-bg: #FFFCF5; /* Sfondo Crema */
+            --kawaii-shadow: #E0A0C0; /* Ombra Rosa Morbida */
+            --kawaii-accent: #FF5FA2; /* Fucsia Acceso */
         }
-        h1, h2 {
-            color: #333;
-            border-bottom: 2px solid #ccc;
+        
+        body {
+            /* Font cartoonesco */
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--kawaii-soft-bg);
+            color: #555;
+            line-height: 1.6;
+        }
+        
+        h1 {
+            color: var(--kawaii-accent); /* Titolo Fucsia */
+            border-bottom: 4px dashed var(--kawaii-pink);
+            padding-bottom: 10px;
+            margin-top: 0;
+            text-align: center;
+            font-size: 2.2em;
+        }
+        
+        h2 {
+            color: var(--kawaii-accent);
+            border-bottom: 2px solid var(--kawaii-pink);
             padding-bottom: 5px;
             margin-top: 20px;
+            font-size: 1.5em;
         }
+        
         .container {
             display: flex;
             flex-wrap: wrap;
-            gap: 20px;
+            gap: 25px;
+            margin-top: 25px;
         }
+        
         .meal {
             background-color: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            flex: 1 1 300px; 
+            padding: 20px;
+            border-radius: 25px; /* Bordi molto arrotondati */
+            box-shadow: 5px 5px 10px var(--kawaii-shadow); /* Ombra morbida */
+            border: 3px solid var(--kawaii-pink); /* Bordo spesso */
+            flex: 1 1 320px;
         }
 
-        /* NUOVO STILE: Elementi Affiancati */
+        /* MODIFICA CRITICA: Layout Orizzontale */
         .itemsContainer {
             display: flex;
             flex-wrap: wrap; /* Permette agli elementi di andare a capo su schermi piccoli */
-            gap: 15px; /* Spazio tra gli alimenti */
-            margin-top: 10px;
+            gap: 15px; /* Spazio tra gli alimenti affiancati */
+            margin-top: 15px;
         }
-        /* FINE NUOVO STILE */
-
+        /* FINE MODIFICA CRITICA */
+        
         .item {
-            border: 1px solid #ddd;
-            padding: 10px;
-            /* Rimuovo margin-top qui perché è gestito da gap in .itemsContainer */
-            border-radius: 4px;
-            background-color: #f9f9f9;
+            border: 2px dashed var(--kawaii-green);
+            padding: 12px;
+            /* margin-top rimosso, gestito da gap in itemsContainer */
+            border-radius: 15px;
+            background-color: #f0fff0; /* Sfondo leggero */
             position: relative;
+            /* Rende ogni alimento un blocco compatto */
+            flex: 0 0 auto; 
         }
+
+        /* Stile input e select */
+        input[type="text"], input[type="number"], select {
+            padding: 10px;
+            margin-right: 5px;
+            border: 2px solid var(--kawaii-pink);
+            border-radius: 10px;
+            box-shadow: inset 1px 1px 3px rgba(0,0,0,0.1);
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus, input[type="number"]:focus, select:focus {
+            border-color: var(--kawaii-accent);
+        }
+
+        /* Stile pulsanti principali */
+        button {
+            padding: 10px 15px;
+            background-color: var(--kawaii-green);
+            color: #333;
+            border: 2px solid #66bb66;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin: 4px 2px;
+            font-weight: bold;
+            box-shadow: 2px 2px 0px #66bb66;
+        }
+
+        button:hover {
+            background-color: #A0D0A0;
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px #66bb66;
+        }
+        
+        /* Colori specifici per i bottoni Cloud */
+        .header-actions button:nth-child(2), /* ☁️ Salva */
+        .header-actions button:nth-child(3) { /* ⬇️ Carica */
+            background-color: var(--kawaii-pink); 
+            border-color: var(--kawaii-accent);
+            box-shadow: 2px 2px 0px var(--kawaii-accent);
+        }
+        .header-actions button:nth-child(2):hover,
+        .header-actions button:nth-child(3):hover {
+            background-color: #EFA0C0;
+            box-shadow: 1px 1px 0px var(--kawaii-accent);
+        }
+
         .item button {
-            position: absolute;
-            top: 10px;
-            right: 10px;
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 1.2em;
+            padding: 0;
+            margin: 0;
+            box-shadow: none;
+            position: absolute; /* Posizionamento assoluto per i bottoni nell'item */
         }
         .item button:hover {
             opacity: 0.7;
+            transform: none;
         }
         .item button:nth-child(2) { /* Edit button */
             right: 40px;
         }
-
-        input[type="text"], input[type="number"], select {
-            padding: 8px;
-            margin-right: 5px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            padding: 8px 12px;
-            background-color: #5cb85c;
-            color: white;
+        /* Bottoni modifica/elimina all'interno dell'item */
+        .item button {
+            background: none;
             border: none;
-            border-radius: 4px;
             cursor: pointer;
-            transition: background-color 0.3s;
-            margin: 2px;
+            font-size: 1.2em;
+            padding: 0;
+            margin: 0;
+            box-shadow: none;
+            position: absolute; 
+            top: 2px; 
+            right: 10px;
         }
-        button:hover {
-            background-color: #4cae4c;
+        .item button:nth-child(1) { /* Edit button (primo bottone) */
+            right: 40px;
         }
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
+
+
         .mealTotals, #totals-day {
-            margin-top: 10px;
-            padding: 10px;
-            border-top: 1px solid #eee;
+            margin-top: 15px;
+            padding: 15px;
+            border-top: 3px dashed var(--kawaii-green);
             font-weight: bold;
             color: #333;
+            background-color: #f0fff0;
+            border-radius: 10px;
         }
-        .sportDiv {
+        
+        /* Bottone flottante */
+        #floating-btn {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background-color: #ffeb3b;
-            padding: 15px;
-            border-radius: 8px;
+            background-color: var(--kawaii-accent); /* Fucsia */
+            color: white;
+            border: 4px solid var(--kawaii-pink);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 1.5em;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            cursor: pointer;
             z-index: 1000;
+            animation: pulse 2s infinite;
         }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
         .header-actions {
             margin-bottom: 20px;
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             gap: 10px;
+            padding: 15px;
+            background-color: var(--kawaii-green);
+            border-radius: 20px;
+            border: 3px solid #66bb66;
+            box-shadow: 3px 3px 6px #A0D0A0;
         }
-        /* Modale di base */
+        /* Modale */
         .modal {
             display: none; 
             position: fixed; 
@@ -118,59 +218,48 @@
             width: 100%; 
             height: 100%; 
             overflow: auto; 
-            background-color: rgba(0,0,0,0.4); 
+            background-color: rgba(247, 182, 216, 0.6); /* Sfondo rosa traslucido */
             justify-content: center;
             align-items: center;
         }
         .modalContent {
-            background-color: #fefefe;
-            margin: auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 600px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            background-color: #fff;
+            padding: 25px;
+            border: 4px dashed var(--kawaii-accent);
+            width: 90%;
+            max-width: 650px;
+            border-radius: 30px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
-        .modalContent label, .modalContent input, .modalContent textarea, .modalContent select {
-            display: block;
-            margin-top: 10px;
-            width: 95%;
-        }
-        .modalContent textarea {
-            min-height: 80px;
-        }
+        /* Stile ricetta */
         .recipeDiv {
-            border: 2px dashed #90EE90;
-            padding: 10px;
-            margin-top: 10px;
-            background-color: #e6ffe6;
-            border-radius: 5px;
+            border: 2px solid var(--kawaii-accent);
+            background-color: #ffefff;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 15px;
+            box-shadow: 1px 1px 5px rgba(0,0,0,0.1);
         }
-        #allRecipesSelect {
-            width: 98%;
-            margin-bottom: 15px;
-        }
-        /* Nuovo stile per le sottocartelle ricette */
         .recipe-category-heading {
-            background-color: #add8e6;
+            background-color: var(--kawaii-green);
             color: #333;
-            padding: 8px;
+            padding: 10px;
             margin-top: 15px;
             margin-bottom: 5px;
-            border-radius: 5px;
+            border-radius: 15px;
             font-weight: bold;
             cursor: pointer;
-            border: 1px solid #90b6c2;
+            border: 2px solid #66bb66;
+            box-shadow: 2px 2px 0px #66bb66;
         }
         .recipe-list {
             padding-left: 10px;
-            border-left: 2px solid #add8e6;
+            border-left: 2px solid var(--kawaii-green);
             margin-bottom: 10px;
         }
         .recipe-item-in-list {
             padding: 8px;
-            border-bottom: 1px dotted #ccc;
+            border-bottom: 1px dotted var(--kawaii-pink);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -178,19 +267,32 @@
         .recipe-item-in-list:last-child {
             border-bottom: none;
         }
+        /* Stile per i dati nello sport div (flottante) */
+        .sportDiv {
+            position: fixed;
+            bottom: 20px;
+            left: 20px; /* Spostato a sinistra per non coprire il bottone flottante */
+            background-color: #fff0f5; /* Rosa chiaro */
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px var(--kawaii-shadow);
+            border: 3px solid var(--kawaii-pink);
+            z-index: 1000;
+            max-width: 250px;
+        }
     </style>
 </head>
 <body>
 
-    <h1>🥗 Diario Alimentare Kawaii</h1>
+    <h1>💖 Diario Alimentare ✨ Kawaii 🎀</h1>
 
     <div class="header-actions">
-        <label for="dateInput">Seleziona Data:</label>
+        <label for="dateInput">📅 Data:</label>
         <input type="date" id="dateInput" onchange="changeDay(this.value)">
         <button onclick="saveSyncJSONBin()">☁️ Salva su Cloud</button>
         <button onclick="loadSyncJSONBin()">⬇️ Carica da Cloud</button>
-        <button onclick="showNutritionModal()">➕ Database Alimenti</button>
-        <button onclick="showAllRecipes()">📖 Tutte le Ricette</button>
+        <button onclick="showNutritionModal()">➕ Database 🍎</button>
+        <button onclick="showAllRecipes()">📖 Ricette 🍰</button>
     </div>
 
     <div id="totals-day"></div>
@@ -198,6 +300,17 @@
     <div id="diaryContainer" class="container">
         </div>
 
+    <button id="floating-btn" onclick="showSportModal()">🏃‍♀️</button>
+
+    <div id="sportModal" class="modal">
+        <div class="modalContent">
+            <h2>🏃‍♀️ Attività Fisica & Calorie Giornaliere</h2>
+            <div id="sportContent">
+                </div>
+            <button style="margin-top: 15px;" onclick="closeSportModal()">Chiudi</button>
+        </div>
+    </div>
+    
     <div id="nutritionModal" class="modal">
         <div class="modalContent">
             <h2>Database Nutrizionale</h2>
@@ -264,7 +377,7 @@
                 <option value="">-- Nessuna ricetta selezionata --</option>
             </select>
 
-            <div id="recipeDetailContainer" style="margin-top: 15px; margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+            <div id="recipeDetailContainer" style="margin-top: 15px; margin-bottom: 20px; padding: 10px; border: 1px solid var(--kawaii-pink); border-radius: 5px; background-color: #fff5fa;">
                 Seleziona una ricetta sopra per vederne i dettagli.
             </div>
 
@@ -293,23 +406,23 @@
 
         // Dati iniziali (saranno sovrascritti dal localStorage o JSONBin)
         let foodDB = [
-            {name:"Kiwi", kcal100:49, carbs100:9, protein100:0, fat100:0, img:""},
-            {name:"Zucca", kcal100:30, carbs100:6.9, protein100:0, fat100:0, img:""},
-            {name:"Fragole", kcal100:30, carbs100:5.3, protein100:0, fat100:0, img:""},
-            {name:"Prugne secche", kcal100:65, carbs100:51.2, protein100:0, fat100:0, img:""},
-            {name:"Zucchina", kcal100:15, carbs100:0, protein100:0, fat100:0, img:""}
+            {name:"Kiwi", kcal100:49, carbs100:9, protein100:0.8, fat100:0.4, img:""},
+            {name:"Zucca", kcal100:30, carbs100:6.9, protein100:1.1, fat100:0.1, img:""},
+            {name:"Fragole", kcal100:30, carbs100:5.3, protein100:0.7, fat100:0.4, img:""},
+            {name:"Prugne secche", kcal100:240, carbs100:51.2, protein100:2.2, fat100:0.4, img:""},
+            {name:"Zucchina", kcal100:15, carbs100:3.1, protein100:1.2, fat100:0.1, img:""}
         ];
 
         let recipeDB = {
             "Pasta al Pesto Leggero": { 
-                ingredients: "Pasta, pesto, pomodorini", 
+                ingredients: "Pasta integrale (80g), Pesto Light (20g), Pomodorini (50g)", 
                 procedure: "Cuoci la pasta, condisci con il pesto e aggiungi i pomodorini freschi.", 
                 cookTime: "15 minuti", 
                 method: "Bollitura",
                 type: "Primo" 
             },
             "Petto di Pollo al Limone": { 
-                ingredients: "Petto di pollo, limone, olio, sale", 
+                ingredients: "Petto di pollo (150g), Limone, Olio (5g), Sale", 
                 procedure: "Cuoci il pollo in padella, sfuma con il limone.", 
                 cookTime: "10 minuti", 
                 method: "Padella",
@@ -322,7 +435,7 @@
         let currentMealForRecipe = null;
         let currentRecipeToEdit = null;
 
-        // --- CONFIGURAZIONE CHIAVI JSONBin (CONFERMATE E CORRETTE) ---
+        // --- CONFIGURAZIONE CHIAVI JSONBin (Mantenute le chiavi precedenti) ---
         const JSONBIN_BIN_ID = "6912f6b1d0ea881f40e14975"; 
         const JSONBIN_MASTER_KEY = "$2a$10$/oqt/konWBpXfYJhVx2EHONSYiQZCSS8PCD7IqU3yPAkckNuE8lP2"; 
         const JSONBIN_READ_KEY = "$2a$10$ClNFWbnoyUzJUFS5AsSv0.PsFdhP3D4PjGFXHiLChKSA9j0.TPakq"; 
@@ -344,6 +457,9 @@
             MEALS.forEach(m=>{
                 if(!diary[date][m]) diary[date][m]=[];
             });
+            // Assicurati che il div per l'attività fisica sia sempre chiuso all'avvio
+            const sportDiv = document.querySelector('.sportDiv');
+            if (sportDiv) sportDiv.remove();
         }
 
         function renderDiary(){
@@ -384,12 +500,13 @@
             const qty = parseFloat(document.getElementById(`qty-${meal}`).value);
             if(!name || isNaN(qty) || qty<=0){ alert("Inserisci nome e quantità valida"); return; }
             
-            const cleanName = name.toLowerCase();
-            const f = foodDB.find(x => x.name.toLowerCase() === cleanName);
+            // Normalizza e cerca
+            const cleanName = name.trim().charAt(0).toUpperCase() + name.trim().slice(1).toLowerCase();
+            const f = foodDB.find(x => x.name === cleanName);
             
-            if(!f){ alert("Alimento non trovato"); return; }
+            if(!f){ alert(`Alimento "${cleanName}" non trovato. Aggiungilo al database.`); return; }
             
-            diary[currentDate][meal].push({...f, quantity:qty});
+            diary[currentDate][meal].push({...f, quantity:qty, isDefault:false}); // isDefault:false per gli alimenti aggiunti manualmente
             document.getElementById(`input-${meal}`).value="";
             document.getElementById(`qty-${meal}`).value="";
             updateMeal(meal);
@@ -397,6 +514,7 @@
         }
 
         function insertDefault(meal){
+            // Normalizza i nomi degli alimenti nel defaults per trovare i match corretti nel foodDB
             const defaults = {
                 "Colazione":[{name:"Kiwi",quantity:80},{name:"Zucca",quantity:66},{name:"Fragole",quantity:100},{name:"Prugne secche",quantity:60}],
                 "Pranzo":[{name:"Zucca",quantity:200},{name:"Zucchina",quantity:450}],
@@ -405,9 +523,18 @@
                 "Dopocena":[{name:"Kiwi",quantity:80},{name:"Fragole",quantity:50}],
                 "Spuntino":[{name:"Fragole",quantity:50}]
             };
+            
+            if (!defaults[meal]) return;
+            
             defaults[meal].forEach(d=>{
                 const f = foodDB.find(x=>x.name===d.name);
-                if(f) diary[currentDate][meal].push({...f,quantity:d.quantity,isDefault:true});
+                if(f) {
+                    // Controlla se l'alimento è già presente nello schema (per evitare duplicati se si clicca più volte)
+                    const alreadyExists = diary[currentDate][meal].some(item => item.name === d.name && item.isDefault);
+                    if (!alreadyExists) {
+                        diary[currentDate][meal].push({...f,quantity:d.quantity,isDefault:true});
+                    }
+                }
             });
             updateMeal(meal);
             autoSaveKawaii(); 
@@ -443,9 +570,21 @@
                 totalKcal += kcal; totalCarbs += carbs; totalProt += prot; totalFat += fat;
                 const div = document.createElement('div');
                 div.className="item";
-                div.innerHTML = `<b>${f.name}</b><br>🍴 ${f.quantity}g/ml<br>🔥 ${kcal.toFixed(1)} kcal<br>🍞 ${carbs.toFixed(1)}g<br>🥚 ${prot.toFixed(1)}g<br>🥑 ${fat.toFixed(1)}g
-                    <button style="top:2px; right:22px;" onclick="editFoodInMeal('${meal}',${i})">✏️</button>
-                    <button onclick="removeFood('${meal}',${i})">🗑️</button>`;
+
+                // Aggiunto l'icona per distinguere gli elementi dello schema
+                const isDefaultTag = f.isDefault ? '📌 ' : '🍴 '; 
+
+                // Struttura in colonna (verticale) all'interno del riquadro dell'alimento
+                div.innerHTML = `
+                    <b>${isDefaultTag} ${f.name}</b>
+                    <br>Quantità: ${f.quantity}g/ml
+                    <br>Kcal: ${kcal.toFixed(1)}
+                    <br>Carbs: ${carbs.toFixed(1)}g
+                    <br>Prot: ${prot.toFixed(1)}g
+                    <br>Grassi: ${fat.toFixed(1)}g
+                    <button onclick="removeFood('${meal}',${i})">🗑️</button>
+                    <button onclick="editFoodInMeal('${meal}',${i})">✏️</button>
+                `;
                 container.appendChild(div);
             });
 
@@ -476,7 +615,8 @@
 
         function updateDayTotals(){
             let totalKcal=0, totalCarbs=0, totalProt=0, totalFat=0;
-            let selKcal=0, selCarbs=0, selProt=0, selFat=0;
+            let selKcal=0, selCarbs=0, selProt=0, selFat=0; // Totali non-schema
+            
             MEALS.forEach(meal=>{
                 if (diary[currentDate][meal]) {
                     diary[currentDate][meal].forEach(f=>{
@@ -485,20 +625,27 @@
                         const prot = f.protein100*f.quantity/100;
                         const fat = f.fat100*f.quantity/100;
                         totalKcal += kcal; totalCarbs += carbs; totalProt += prot; totalFat += fat;
-                        if(!f.isDefault){ selKcal += kcal; selCarbs += carbs; selProt += prot; selFat += fat; }
+                        
+                        // Calcola i totali solo per gli alimenti Aggiunti Manualmente (non schema)
+                        if(!f.isDefault){ 
+                             selKcal += kcal; 
+                             selCarbs += carbs; 
+                             selProt += prot; 
+                             selFat += fat; 
+                        }
                     });
                 }
             });
-            document.getElementById('totals-day').innerHTML = `<b>Totale giornata:</b> 🔥 ${totalKcal.toFixed(1)} kcal | 🍞 ${totalCarbs.toFixed(1)} g | 🥚 ${totalProt.toFixed(1)} g | 🥑 ${totalFat.toFixed(1)} g<br><b>Totale selezionato:</b> 🔥 ${selKcal.toFixed(1)} kcal | 🍞 ${selCarbs.toFixed(1)} g | 🥚 ${selProt.toFixed(1)} g | 🥑 ${selFat.toFixed(1)} g`;
+            document.getElementById('totals-day').innerHTML = `<b>Totale giornata (Schema + Manuale):</b> 🔥 ${totalKcal.toFixed(1)} kcal | 🍞 ${totalCarbs.toFixed(1)} g | 🥚 ${totalProt.toFixed(1)} g | 🥑 ${totalFat.toFixed(1)} g<br><b>Totale Alimentazione Manuale:</b> 🔥 ${selKcal.toFixed(1)} kcal | 🍞 ${selCarbs.toFixed(1)} g | 🥚 ${selProt.toFixed(1)} g | 🥑 ${selFat.toFixed(1)} g`;
         }
 
         // --- Sport
         function showSport(){
             const existing = document.querySelector('.sportDiv');
             if(existing) existing.remove();
+            
             const div = document.createElement('div');
             div.className="sportDiv";
-            div.innerHTML = `🏃‍♂️ Attività fisica consigliata:<br>`;
             
             let totalKcalDay = 0;
             MEALS.forEach(meal=>{
@@ -508,19 +655,32 @@
                 }
                 totalKcalDay += kcal;
             });
-
+            
             if (totalKcalDay > 0) {
-                div.innerHTML += `<b>Totale Calorico Giornaliero:</b> 🔥 ${totalKcalDay.toFixed(1)} kcal<br>`;
-                div.innerHTML += `<b>Tempo Attività Necessario:</b><br>`;
+                div.innerHTML = `<b>🏃‍♀️ Totale Calorico Giornaliero:</b> 🔥 ${totalKcalDay.toFixed(1)} kcal<br><br>`;
+                div.innerHTML += `<b>Tempo Attività Suggerito:</b><br>`;
                 activities.forEach(act=>{
-                    div.innerHTML += `- ${act.name}: ${Math.ceil(totalKcalDay/act.kcalPerMin)} min<br>`;
+                    div.innerHTML += `- ${act.name}: <b>${Math.ceil(totalKcalDay/act.kcalPerMin)} min</b><br>`;
                 });
             } else {
-                div.innerHTML += `Non ci sono ancora calorie registrate per oggi.`;
+                div.innerHTML = `🏃‍♀️ Non ci sono ancora calorie registrate per oggi.`;
             }
 
             document.body.appendChild(div);
         }
+        
+        // Simulo la chiusura della modale (anche se il div sport è flottante)
+        function closeSportModal() {
+            // Se la modale fosse stata usata, qui ci sarebbe il codice per chiuderla.
+            // Per il momento è un placeholder per coerenza.
+            document.getElementById('sportModal').style.display='none';
+        }
+        function showSportModal() {
+            // Il contenuto è già visibile nel div flottante, ma puoi usare questa funzione per mostrare la modale se preferisci
+            // document.getElementById('sportModal').style.display='flex';
+            alert("Il riepilogo attività fisica è visibile nel riquadro flottante in basso a sinistra.");
+        }
+
 
         // --- Ricette (Gestione Dettaglio Pasto)
         function openRecipeModal(meal, editExisting = false){
@@ -540,7 +700,8 @@
             const sel = document.getElementById('existingRecipeSelect');
             sel.innerHTML = `<option value="">--Seleziona ricetta esistente--</option>`;
             Object.keys(recipeDB).sort().forEach(r=>{
-                sel.innerHTML += `<option value="${r}">${r}</option>`;
+                // Aggiunge anche il tipo nel dropdown per chiarezza
+                sel.innerHTML += `<option value="${r}">${r} (${recipeDB[r].type || 'Altro'})</option>`;
             });
             
             // LOGICA DI PRECOMPILAZIONE PER LA MODIFICA
@@ -566,15 +727,25 @@
 
             // Funzione per precompilare i campi quando si seleziona una ricetta dal select
             sel.onchange = function(){
-                const r = recipeDB[this.value];
+                const name = this.value;
+                const r = recipeDB[name];
                 if(r){
-                    document.getElementById('recipeName').value = this.value;
+                    document.getElementById('recipeName').value = name;
                     document.getElementById('recipeIngredients').value = r.ingredients;
                     document.getElementById('recipeProcedure').value = r.procedure;
                     document.getElementById('recipeCookTime').value = r.cookTime;
                     document.getElementById('recipeMethod').value = r.method;
                     document.getElementById('recipeImg').value = r.img;
                     document.getElementById('recipeType').value = r.type || "Altro"; 
+                } else {
+                    // Pulisci se selezionato "--Seleziona ricetta esistente--"
+                    document.getElementById('recipeName').value = "";
+                    document.getElementById('recipeIngredients').value = "";
+                    document.getElementById('recipeProcedure').value = "";
+                    document.getElementById('recipeCookTime').value = "";
+                    document.getElementById('recipeMethod').value = "";
+                    document.getElementById('recipeImg').value = "";
+                    document.getElementById('recipeType').value = "Primo";
                 }
             };
 
@@ -584,6 +755,40 @@
         function saveRecipeForMeal(){
             const name = document.getElementById('recipeName').value.trim();
             if(!name){ alert("Inserisci un nome per la ricetta"); return; }
+            
+            const oldName = document.getElementById('existingRecipeSelect').value;
+
+            // Se il nome della ricetta è cambiato, assicurati che la vecchia ricetta sia eliminata dal database
+            if (currentRecipeToEdit && name !== currentRecipeToEdit) {
+                if(confirm(`Hai rinominato la ricetta da '${currentRecipeToEdit}' a '${name}'. Vuoi eliminare la vecchia versione dal database?`)) {
+                    delete recipeDB[currentRecipeToEdit];
+                    // Aggiorna tutti i riferimenti nel diario
+                     Object.keys(diary).forEach(date => {
+                        MEALS.forEach(m => {
+                            if(diary[date][m] && diary[date][m].recipe === currentRecipeToEdit){
+                                diary[date][m].recipe = name;
+                            }
+                        });
+                    });
+                } else {
+                    // Se l'utente non vuole eliminare la vecchia, la nuova ricetta sarà salvata con il nuovo nome
+                    // e la vecchia rimarrà nel DB (e nei pasti precedenti).
+                }
+            } else if (oldName && name !== oldName) {
+                 // Caso in cui si è selezionato un elemento esistente e si è cambiato il nome
+                 if(confirm(`Hai rinominato la ricetta da '${oldName}' a '${name}'. Vuoi eliminare la vecchia versione dal database?`)) {
+                    delete recipeDB[oldName];
+                     // Aggiorna tutti i riferimenti nel diario
+                     Object.keys(diary).forEach(date => {
+                        MEALS.forEach(m => {
+                            if(diary[date][m] && diary[date][m].recipe === oldName){
+                                diary[date][m].recipe = name;
+                            }
+                        });
+                    });
+                }
+            }
+
 
             const recipeType = document.getElementById('recipeType').value;
 
@@ -632,6 +837,10 @@
             }
             
             // Caso 2: Elimina definitivamente dal Database (chiamata dalla modale)
+            // Se la modale è aperta per una ricetta specifica, usa quel nome.
+            const selectedRecipeName = document.getElementById('existingRecipeSelect').value;
+            nameToDelete = selectedRecipeName || recipeNameInput;
+
             if(!nameToDelete) return;
 
             if(confirm(`Sei sicuro di voler eliminare DEFINITIVAMENTE la ricetta '${nameToDelete}' dal database? Verrà rimossa da tutti i giorni in cui è usata.`)) {
@@ -660,6 +869,8 @@
 
         function closeRecipeModal(){
             document.getElementById('recipeModal').style.display='none';
+            // Ricarica il diario per aggiornare eventuali modifiche che potrebbero essere state fatte al database
+            renderDiary(); 
         }
 
         // --- Ricette (Gestione Centralizzata)
@@ -683,7 +894,7 @@
             
             // 1. Popola il Selettore Generale 
             Object.keys(recipeDB).sort().forEach(r=>{
-                select.innerHTML += `<option value="${r}">${r}</option>`;
+                select.innerHTML += `<option value="${r}">${r} (${recipeDB[r].type || 'Altro'})</option>`;
             });
 
             // 2. Crea le sezioni per tipo
@@ -742,7 +953,7 @@
                 const rec = recipeDB[name];
                 if(rec) {
                     container.innerHTML = `
-                        <div class="recipeDiv">
+                        <div class="recipeDiv" style="border-style: solid;">
                             <b>${name}</b> (${rec.type || 'N/D'})<br>
                             Ingredienti: ${rec.ingredients.replace(/\n/g, ', ')}<br>
                             Procedimento: ${rec.procedure}<br>
@@ -829,7 +1040,16 @@
             const carbs = parseFloat(prompt("Carbs/100g:", f.carbs100));
             const protein = parseFloat(prompt("Proteine/100g:", f.protein100));
             const fat = parseFloat(prompt("Grassi/100g:", f.fat100));
-            foodDB[i] = {name, kcal100:kcal, carbs100:carbs, protein100:protein, fat100:fat, img:f.img};
+            
+            if (isNaN(kcal) || isNaN(carbs) || isNaN(protein) || isNaN(fat)) {
+                alert("Valori nutrizionali non validi. Riprova.");
+                return;
+            }
+            
+            // Capitalizza la prima lettera del nome
+            const cleanName = name.trim().charAt(0).toUpperCase() + name.trim().slice(1).toLowerCase();
+            
+            foodDB[i] = {name: cleanName, kcal100:kcal, carbs100:carbs, protein100:protein, fat100:fat, img:f.img};
             updateFoodList();
             showNutritionModal();
             autoSaveKawaii(); 
@@ -837,9 +1057,21 @@
 
         function removeFoodTable(i){
             if(confirm("Vuoi eliminare questo alimento?")){
+                const foodName = foodDB[i].name;
+                
+                // Rimuovi anche da tutti i pasti nel diario
+                Object.keys(diary).forEach(date => {
+                    MEALS.forEach(m => {
+                        if(diary[date][m]){
+                            diary[date][m] = diary[date][m].filter(item => item.name !== foodName);
+                        }
+                    });
+                });
+                
                 foodDB.splice(i,1);
                 updateFoodList();
                 showNutritionModal();
+                renderDiary();
                 autoSaveKawaii(); 
             }
         }
@@ -847,6 +1079,7 @@
             const nameInput = prompt("Nome alimento:");
             if(!nameInput) return;
             
+            // Capitalizza la prima lettera del nome
             const name = nameInput.trim().charAt(0).toUpperCase() + nameInput.trim().slice(1).toLowerCase();
             
             const kcal = parseFloat(prompt("Kcal/100g:"));
@@ -861,7 +1094,7 @@
             updateFoodList();
             showNutritionModal();
             autoSaveKawaii(); 
-            alert("🍎 Nuovo alimento salvato nel database!");
+            alert(`🍎 Nuovo alimento "${name}" salvato nel database!`);
         }
 
         function closeNutritionModal(){
