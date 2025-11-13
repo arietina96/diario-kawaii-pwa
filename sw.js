@@ -1,13 +1,12 @@
-const CACHE_NAME = 'diario-kawaii-cache-v1';
+// **IMPORTANTE: Aggiornato a v3 per forzare l'eliminazione della cache precedente**
+const CACHE_NAME = 'diario-kawaii-cache-v3';
 const FILES_TO_CACHE = [
   '/',
-  '/index.html'
-  // Potresti aggiungere altri file come:
-  // '/style.css', 
-  // '/script.js' (se avessi il JS separato),
-  // '/manifest.json',
-  // '/icon-192.png',
-  // '/icon-512.png'
+  '/index.html',
+  '/manifest.json',
+  '/sw.js',
+  '/icon-192.png',
+  '/icon-512.png'
 ];
 
 self.addEventListener('install', evt => {
@@ -24,7 +23,7 @@ self.addEventListener('install', evt => {
 
 self.addEventListener('activate', evt => {
   console.log('[Service Worker] Attivazione: Pulizia vecchie cache');
-  // Elimina tutte le cache precedenti che non corrispondono a CACHE_NAME
+  // Elimina tutte le cache precedenti che non corrispondono a CACHE_NAME (v3)
   evt.waitUntil(
     caches.keys().then(keys => Promise.all(
       keys.map(key => { 
