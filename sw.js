@@ -1,5 +1,5 @@
-// **IMPORTANTE: Aggiornato a v3 per forzare l'eliminazione della cache precedente**
-const CACHE_NAME = 'diario-kawaii-cache-v3';
+// **IMPORTANTE: Aggiornato a v4 per forzare l'eliminazione della cache precedente**
+const CACHE_NAME = 'diario-kawaii-cache-v4'; 
 const FILES_TO_CACHE = [
   '/',
   '/index.html',
@@ -23,7 +23,7 @@ self.addEventListener('install', evt => {
 
 self.addEventListener('activate', evt => {
   console.log('[Service Worker] Attivazione: Pulizia vecchie cache');
-  // Elimina tutte le cache precedenti che non corrispondono a CACHE_NAME (v3)
+  // Elimina tutte le cache precedenti che non corrispondono a CACHE_NAME (v4)
   evt.waitUntil(
     caches.keys().then(keys => Promise.all(
       keys.map(key => { 
