@@ -345,9 +345,9 @@
         let currentMealForRecipe = null;
         let currentRecipeToEdit = null;
 
-        // --- CONFIGURAZIONE CHIAVI JSONBin
+        // --- CONFIGURAZIONE CHIAVI JSONBin (AGGIORNATE CON I TUOI DATI)
         const JSONBIN_BIN_ID = "6912f6b1d0ea881f40e14975"; 
-        const JSONBIN_MASTER_KEY = "$2a$10$/oqt/konWBpXfYJhVx2EHONSYiQZCSS8PCD7IqU3yPAcckNuE8lP2"; 
+        const JSONBIN_MASTER_KEY = "$2a$10$/oqt/konWBpXfYJhVx2EHONSYiQZCSS8PCD7IqU3yPAkckNuE8lP2"; 
         const JSONBIN_READ_KEY = "$2a$10$ClNFWbnoyUzJUFS5AsSv0.PsFdhP3D4PjGFXHiLChKSA9j0.TPakq"; 
 
 
@@ -945,7 +945,7 @@
             })
             .catch((err) => {
                 console.error("❌ Errore sincronizzazione Cloud (PUT):", err);
-                alert("⚠️ Non è stato possibile sincronizzare su Cloud. Dati salvati solo localmente come fallback.");
+                alert("⚠️ Non è stato possibile sincronizzare su Cloud. Dati salvati solo localmente come fallback. Controlla le tue chiavi JSONBin!");
             });
         }
 
@@ -989,7 +989,7 @@
                         initDiaryForDate(currentDate);
                         updateFoodList();
                         renderDiary();
-                        alert("📂 Cloud non raggiungibile — caricati i dati locali come fallback.");
+                        alert("📂 Cloud non raggiungibile — caricati i dati locali come fallback. Controlla la tua connessione!");
                     } else {
                         alert("❌ Cloud non raggiungibile e non ci sono dati locali salvati.");
                     }
