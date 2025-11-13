@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kawaii Diet - Diario Alimentare</title>
+    <link rel="manifest" href="manifest.json"> 
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -271,7 +272,7 @@
     <script>
         // --- Costanti e variabili
         const MEALS = ["Colazione","Spuntino","Pranzo","Merenda","Cena","Dopocena"];
-        const RECIPE_TYPES = ["Primo", "Secondo", "Dolce", "Contorno", "Altro"]; // Nuova costante per i tipi
+        const RECIPE_TYPES = ["Primo", "Secondo", "Dolce", "Contorno", "Altro"]; 
         const activities = [
             {name:"Tapis roulant", kcalPerMin:10},
             {name:"Ballo Caraibico", kcalPerMin:8},
@@ -312,10 +313,10 @@
         let currentMealForRecipe = null;
         let currentRecipeToEdit = null;
 
-        // --- CONFIGURAZIONE CHIAVI JSONBin (INSERITE) ---
+        // --- CONFIGURAZIONE CHIAVI JSONBin (CONFERMATE E CORRETTE) ---
         const JSONBIN_BIN_ID = "6912f6b1d0ea881f40e14975"; 
         const JSONBIN_MASTER_KEY = "$2a$10$/oqt/konWBpXfYJhVx2EHONSYiQZCSS8PCD7IqU3yPAkckNuE8lP2"; 
-        const JSONBIN_READ_KEY = "$2a$10$ClNFWbnoyUzJUFS5AsSv0.PsFdhP3D4PjGFHICLChKSA9j0.TPakq"; 
+        const JSONBIN_READ_KEY = "$2a$10$ClNFWbnoyUzJUFS5AsSv0.PsFdhP3D4PjGFXHiLChKSA9j0.TPakq"; 
 
 
         // --- Funzioni di utilità
@@ -583,7 +584,7 @@
                 cookTime: document.getElementById('recipeCookTime').value.trim(),
                 method: document.getElementById('recipeMethod').value.trim(),
                 img: document.getElementById('recipeImg').value.trim(),
-                type: recipeType // Salvataggio del nuovo campo
+                type: recipeType 
             };
             
             if (currentMealForRecipe) {
@@ -652,7 +653,7 @@
             document.getElementById('recipeModal').style.display='none';
         }
 
-        // --- Ricette (Gestione Centralizzata - AGGIORNATA)
+        // --- Ricette (Gestione Centralizzata)
 
         function showAllRecipes(){
             const container = document.getElementById('allRecipesContainer');
@@ -671,18 +672,17 @@
                 return;
             }
             
-            // 1. Popola il Selettore Generale (per Modifica/Eliminazione)
+            // 1. Popola il Selettore Generale 
             Object.keys(recipeDB).sort().forEach(r=>{
                 select.innerHTML += `<option value="${r}">${r}</option>`;
             });
 
-            // 2. Crea le sezioni per tipo (Primi, Secondi, Dolci...)
+            // 2. Crea le sezioni per tipo
             const groupedRecipes = {};
             RECIPE_TYPES.forEach(type => { groupedRecipes[type] = []; });
             
             Object.keys(recipeDB).forEach(name => {
                 const recipe = recipeDB[name];
-                // Usa il tipo salvato o "Altro" come fallback
                 const type = recipe.type && RECIPE_TYPES.includes(recipe.type) ? recipe.type : "Altro";
                 groupedRecipes[type].push({name, ...recipe});
             });
@@ -690,7 +690,6 @@
             // 3. Renderizza le sezioni
             let htmlContent = '';
             
-            // Ordina i tipi per l'output 
             const orderedTypes = ["Primo", "Secondo", "Contorno", "Dolce", "Altro"];
             
             orderedTypes.forEach(type => {
@@ -699,7 +698,6 @@
                     htmlContent += `<div class="recipe-category-heading">${type} (${list.length})</div>`;
                     htmlContent += `<div class="recipe-list">`;
                     
-                    // Ordina le ricette all'interno della categoria per nome
                     list.sort((a, b) => a.name.localeCompare(b.name)).forEach(r => {
                         htmlContent += `
                             <div class="recipe-item-in-list">
@@ -870,7 +868,7 @@
             renderDiary();
         }
 
-        // --- Sincronizzazione JSONBin 
+        // --- Sincronizzazione JSONBin (Chiavi corrette)
         function saveSyncJSONBin() {
             initDiaryForDate(currentDate);
             const allData = { diary, foodDB, recipeDB, savedAt: new Date().toISOString() };
@@ -954,7 +952,7 @@
             });
         }
 
-        // --- Avvio
+        // --- Avvio e **REGISTRAZIONE SERVICE WORKER**
         document.addEventListener('DOMContentLoaded', () => {
             try {
                 const localData = localStorage.getItem("kawaiiAllData");
@@ -968,6 +966,14 @@
                 console.error("Errore nel caricamento dei dati locali all'avvio:", e);
             }
             
+            // **IMPORTANTE: Registrazione Service Worker per PWA**
+            if ('serviceWorker' in navigator) {
+                // Il percorso è relativo alla pagina corrente (index.html)
+                navigator.serviceWorker.register('sw.js') 
+                .then(reg => console.log('Service Worker Registrato!', reg))
+                .catch(err => console.log('Errore Service Worker:', err));
+            }
+
             document.getElementById('dateInput').value = currentDate;
             
             initDiaryForDate(currentDate);
