@@ -6,100 +6,164 @@
     <title>Kawaii Diet - Diario Alimentare</title>
     <link rel="manifest" href="manifest.json"> 
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f9;
+        /* 💖 Nuova palette Cartoon Kawaii */
+        :root {
+            --kawaii-pink: #F7B6D8; /* Rosa Antico */
+            --kawaii-green: #C8E6C9; /* Verde Pastello */
+            --kawaii-soft-bg: #FFFCF5; /* Sfondo Crema */
+            --kawaii-shadow: #E0A0C0; /* Ombra Rosa Morbida */
+            --kawaii-accent: #FF5FA2; /* Fucsia Acceso */
         }
-        h1, h2 {
-            color: #333;
-            border-bottom: 2px solid #ccc;
+        
+        body {
+            /* Font cartoonesco */
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--kawaii-soft-bg);
+            color: #555;
+            line-height: 1.6;
+        }
+        
+        h1 {
+            color: var(--kawaii-accent); /* Titolo Fucsia */
+            border-bottom: 4px dashed var(--kawaii-pink);
+            padding-bottom: 10px;
+            margin-top: 0;
+            text-align: center;
+            font-size: 2.2em;
+        }
+        
+        h2 {
+            color: var(--kawaii-accent);
+            border-bottom: 2px solid var(--kawaii-pink);
             padding-bottom: 5px;
             margin-top: 20px;
+            font-size: 1.5em;
         }
+        
         .container {
             display: flex;
             flex-wrap: wrap;
-            gap: 20px;
+            gap: 25px;
+            margin-top: 25px;
         }
+        
         .meal {
             background-color: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            flex: 1 1 300px; /* Adattabile e largo almeno 300px */
+            padding: 20px;
+            border-radius: 25px; /* Bordi molto arrotondati */
+            box-shadow: 5px 5px 10px var(--kawaii-shadow); /* Ombra morbida */
+            border: 3px solid var(--kawaii-pink); /* Bordo spesso */
+            flex: 1 1 320px;
         }
+        
         .item {
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin-top: 10px;
-            border-radius: 4px;
-            background-color: #f9f9f9;
+            border: 2px dashed var(--kawaii-green);
+            padding: 12px;
+            margin-top: 15px;
+            border-radius: 15px;
+            background-color: #f0fff0; /* Sfondo leggero */
             position: relative;
         }
+        
+        /* Stile input e select */
+        input[type="text"], input[type="number"], select {
+            padding: 10px;
+            margin-right: 5px;
+            border: 2px solid var(--kawaii-pink);
+            border-radius: 10px;
+            box-shadow: inset 1px 1px 3px rgba(0,0,0,0.1);
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus, input[type="number"]:focus, select:focus {
+            border-color: var(--kawaii-accent);
+        }
+
+        /* Stile pulsanti principali */
+        button {
+            padding: 10px 15px;
+            background-color: var(--kawaii-green);
+            color: #333;
+            border: 2px solid #66bb66;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin: 4px 2px;
+            font-weight: bold;
+            box-shadow: 2px 2px 0px #66bb66;
+        }
+
+        button:hover {
+            background-color: #A0D0A0;
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px #66bb66;
+        }
+        
+        /* Colori specifici per i bottoni Cloud */
+        .header-actions button:nth-child(2), /* ☁️ Salva */
+        .header-actions button:nth-child(3) { /* ⬇️ Carica */
+            background-color: var(--kawaii-pink); 
+            border-color: var(--kawaii-accent);
+            box-shadow: 2px 2px 0px var(--kawaii-accent);
+        }
+        .header-actions button:nth-child(2):hover,
+        .header-actions button:nth-child(3):hover {
+            background-color: #EFA0C0;
+            box-shadow: 1px 1px 0px var(--kawaii-accent);
+        }
+
         .item button {
-            position: absolute;
-            top: 10px;
-            right: 10px;
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 1.2em;
+            padding: 0;
+            margin: 0;
+            box-shadow: none;
         }
         .item button:hover {
             opacity: 0.7;
+            transform: none;
         }
         .item button:nth-child(2) { /* Edit button */
             right: 40px;
         }
 
-        input[type="text"], input[type="number"], select {
-            padding: 8px;
-            margin-right: 5px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            padding: 8px 12px;
-            background-color: #5cb85c;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin: 2px;
-        }
-        button:hover {
-            background-color: #4cae4c;
-        }
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
         .mealTotals, #totals-day {
-            margin-top: 10px;
-            padding: 10px;
-            border-top: 1px solid #eee;
+            margin-top: 15px;
+            padding: 15px;
+            border-top: 3px dashed var(--kawaii-green);
             font-weight: bold;
             color: #333;
+            background-color: #f0fff0;
+            border-radius: 10px;
         }
         .sportDiv {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background-color: #ffeb3b;
+            background-color: var(--kawaii-pink);
             padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            border-radius: 20px;
+            box-shadow: 4px 4px 8px var(--kawaii-shadow);
             z-index: 1000;
+            border: 2px solid var(--kawaii-accent);
         }
         .header-actions {
             margin-bottom: 20px;
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             gap: 10px;
+            padding: 15px;
+            background-color: var(--kawaii-green);
+            border-radius: 20px;
+            border: 3px solid #66bb66;
+            box-shadow: 3px 3px 6px #A0D0A0;
         }
-        /* Modale di base */
+        /* Modale */
         .modal {
             display: none; 
             position: fixed; 
@@ -109,79 +173,53 @@
             width: 100%; 
             height: 100%; 
             overflow: auto; 
-            background-color: rgba(0,0,0,0.4); 
+            background-color: rgba(247, 182, 216, 0.6); /* Sfondo rosa traslucido */
             justify-content: center;
             align-items: center;
         }
         .modalContent {
-            background-color: #fefefe;
-            margin: auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 600px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            background-color: #fff;
+            padding: 25px;
+            border: 4px dashed var(--kawaii-accent);
+            width: 90%;
+            max-width: 650px;
+            border-radius: 30px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
-        .modalContent label, .modalContent input, .modalContent textarea, .modalContent select {
-            display: block;
-            margin-top: 10px;
-            width: 95%;
-        }
-        .modalContent textarea {
-            min-height: 80px;
-        }
+        /* Stile ricetta */
         .recipeDiv {
-            border: 2px dashed #90EE90;
-            padding: 10px;
-            margin-top: 10px;
-            background-color: #e6ffe6;
-            border-radius: 5px;
+            border: 2px solid var(--kawaii-accent);
+            background-color: #ffefff;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 15px;
+            box-shadow: 1px 1px 5px rgba(0,0,0,0.1);
         }
-        #allRecipesSelect {
-            width: 98%;
-            margin-bottom: 15px;
-        }
-        /* Nuovo stile per le sottocartelle ricette */
         .recipe-category-heading {
-            background-color: #add8e6;
+            background-color: var(--kawaii-green);
             color: #333;
-            padding: 8px;
+            padding: 10px;
             margin-top: 15px;
             margin-bottom: 5px;
-            border-radius: 5px;
+            border-radius: 15px;
             font-weight: bold;
             cursor: pointer;
-            border: 1px solid #90b6c2;
-        }
-        .recipe-list {
-            padding-left: 10px;
-            border-left: 2px solid #add8e6;
-            margin-bottom: 10px;
-        }
-        .recipe-item-in-list {
-            padding: 8px;
-            border-bottom: 1px dotted #ccc;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .recipe-item-in-list:last-child {
-            border-bottom: none;
+            border: 2px solid #66bb66;
+            box-shadow: 2px 2px 0px #66bb66;
         }
     </style>
 </head>
 <body>
 
-    <h1>🥗 Diario Alimentare Kawaii</h1>
+    <h1>💖 Diario Alimentare ✨ Kawaii 🎀</h1>
 
     <div class="header-actions">
-        <label for="dateInput">Seleziona Data:</label>
+        <label for="dateInput">📅 Data:</label>
         <input type="date" id="dateInput" onchange="changeDay(this.value)">
         <button onclick="saveSyncJSONBin()">☁️ Salva su Cloud</button>
         <button onclick="loadSyncJSONBin()">⬇️ Carica da Cloud</button>
-        <button onclick="showNutritionModal()">➕ Database Alimenti</button>
-        <button onclick="showAllRecipes()">📖 Tutte le Ricette</button>
+        <button onclick="showNutritionModal()">➕ Database 🍎</button>
+        <button onclick="showAllRecipes()">📖 Ricette 🍰</button>
     </div>
 
     <div id="totals-day"></div>
@@ -340,10 +378,21 @@
         function renderDiary(){
             const container = document.getElementById('diaryContainer');
             container.innerHTML="";
+            
+            // Mappa per le emoji dei pasti
+            const MEAL_EMOJIS = {
+                "Colazione": "☀️ Colazione", 
+                "Spuntino": "😋 Spuntino", 
+                "Pranzo": "🍝 Pranzo", 
+                "Merenda": "🧁 Merenda", 
+                "Cena": "🌙 Cena", 
+                "Dopocena": "🍿 Dopocena"
+            };
+
             MEALS.forEach(meal=>{
                 let mealDiv = document.createElement('div');
                 mealDiv.className="meal";
-                mealDiv.innerHTML = `<h2>${meal}</h2>
+                mealDiv.innerHTML = `<h2>${MEAL_EMOJIS[meal]}</h2>
                     <input type="text" id="input-${meal}" placeholder="Nome alimento..." list="foodList">
                     <input type="number" id="qty-${meal}" placeholder="Quantità (g/ml)" style="width:120px;">
                     <button onclick="addFood('${meal}')">➕ Aggiungi alimento</button>
@@ -983,7 +1032,3 @@
     </script>
 </body>
 </html>
-
-
-
-
