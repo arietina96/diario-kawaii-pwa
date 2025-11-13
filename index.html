@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diario Alimentare Kawaii – Versione Sincronizzata</title>
+<link rel="manifest" href="manifest.json">
+<style>
+/* Stili esistenti */
+body {font-family: Comic Sans MS,cursive; background:#fff0f8; color:#333; padding:1rem;}
+h1 {color:#ff5fa2; text-align:center;}
+.meal {background:linear-gradient(135deg,#ffd6e8,#ffe6f0); border-radius:20px; padding:1rem; margin-bottom:1rem; box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+.itemsContainer {display:flex; flex-wrap:wrap; gap:0.5rem;}
+.item {background:#fff; padding:0.6rem 0.8rem; border-radius:16px; width:150px; box-shadow:0 2px 6px rgba(0,0,0,0.1); text-align:center; position:relative;}
+.item button {position:absolute; top:2px; right:2px; background:#ff5fa2; color:#fff; border:none; border-radius:50%; cursor:pointer; width:20px; height:20px; font-size:12px;}
+.mealTotals {background:linear-gradient(135deg,#ff9ac9,#ffb0d4); padding:0.6rem; border-radius:14px; margin-top:0.5rem; font-weight:700;}
+.recipeDiv {background:linear-gradient(135deg,#fff0ff,#ffe6ff); padding:0.6rem; border-radius:14px; margin-top:0.5rem;}
+.recipeDiv img {max-width:100%; border-radius:12px; margin-top:0.3rem;}
+.sportDiv {background:linear-gradient(135deg,#ffdae6,#ffd6e8); padding:0.6rem; border-radius:14px; margin-top:0.5rem;}
+.modal {display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:100;}
+.modalContent {background:#fff; padding:1rem; border-radius:20px; width:80%; max-height:80%; overflow-y:auto;}
+input, select, textarea {font-family: Comic Sans MS,cursive; margin-bottom:0.5rem; width:95%;}
+button {padding:0.6rem 1rem; border-radius:16px; border:none; background:#ffb6c1; color:#fff; font-weight:bold; cursor:pointer; margin-right:0.3rem;}
+button:hover {background:#ff5fa2;}
+table {border-collapse:collapse; margin-top:0.5rem; width:100%;}
+table, th, td {border:1px solid #ff5fa2; padding:0.4rem; text-align:center; border-radius:6px;}
+#totals-day {background:linear-gradient(135deg,#ffe6f0,#ffd6e8); margin-top:2rem; font-size:1.2rem; padding:0.8rem; border-radius:14px;}
+</style>
+<script>
+// PWA Service Worker (richiede il file sw.js)
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+}
+</script>
+</head>
+<body>
+
+<h1>🍓 Diario Alimentare Kawaii</h1>
+
+<datalist id="foodList"></datalist>
+
+<label>📅 Seleziona data:</label>
+<input type="date" id="dateInput" onchange="changeDay(this.value)">
+
+<button onclick="saveSyncJSONBin()">🔄 Salva/Sincronizza su Cloud</button>
+<button onclick="loadSyncJSONBin()">📥 Carica da Cloud (o locale)</button>
+
+<div id="diaryContainer"></div>
+<div id="totals-day"><b>Totale giornata:</b> 🔥 0 kcal | 🍞 0 g | 🥚 0 g | 🥑 0 g<br>
+<b>Totale selezionato:</b> 🔥 0 kcal | 🍞 0 g | 🥚 0 g | 🥑 0 g</div>
+
+<button onclick="showNutritionModal()">📊 Tabelle nutrizionali</button>
+<button onclick="showAllRecipes()">📖 Tutte le ricette</button>
+
+<div id="nutritionModal" class="modal">
+    <div class="modalContent">
+        <h2>📊 Tabelle nutrizionali</h2>
+        <table id="nutritionTable"></table>
+        <button onclick="addNewFood()">➕ Aggiungi alimento</button>
+        <button onclick="closeNutritionModal()">Chiudi</button>
+    </div>
+</div>
+
+<div id="recipeModal" class="modal">
+    <div class="modalContent">
+        <h2>📖 Inserisci o seleziona ricetta</h2>
+        <select id="existingRecipeSelect"><option value="">--Seleziona ricetta esistente--</option></select>
+        <input type="text" id="recipeName" placeholder="Nome ricetta">
+        <textarea id="recipeIngredients" placeholder="Ingredienti (uno per riga)"></textarea>
+        <textarea id="recipeProcedure" placeholder="Procedimento"></textarea>
+        <input type="text" id="recipeCookTime" placeholder="Tempo di cottura">
+        <input type="text" id="recipeMethod" placeholder="Metodo (padella, forno, crudo...)">
+        <input type="text" id="recipeImg" placeholder="Link immagine o sito (opzionale)">
+        <button onclick="saveRecipeForMeal()">💾 Salva ricetta</button>
+        <button onclick="deleteRecipeForMeal()">🗑️ Elimina ricetta</button>
+        <button onclick="closeRecipeModal()">Chiudi</button>
+    </div>
+</div>
+
+<div id="allRecipesModal" class="modal">
+    <div class="modalContent">
+        <h2>📖 Tutte le ricette</h2>
+        <div id="allRecipesContainer"></div>
+        <button onclick="closeAllRecipesModal()">Chiudi</button>
+    </div>
+</div>
+
+
+<script>
+// --- Costanti e variabili
+const MEALS = ["Colazione","Spuntino","Pranzo","Merenda","Cena","Dopocena"];
+const activities = [
+    {name:"Tapis roulant", kcalPerMin:10},
+    {name:"Ballo Caraibico", kcalPerMin:8},
+    {name:"Addominali in palestra", kcalPerMin:7},
+    {name:"Passeggiata veloce", kcalPerMin:5},
+    {name:"Stretching", kcalPerMin:4},
+    {name:"Yoga", kcalPerMin:3}
+];
+
+// Dati iniziali (saranno sovrascritti dal localStorage o JSONBin)
+let foodDB = [
+    {name:"Kiwi", kcal100:49, carbs100:9, protein100:0, fat100:0, img:""},
+    {name:"Zucca", kcal100:30, carbs100:6.9, protein100:0, fat100:0, img:""},
+    {name:"Fragole", kcal100:30, carbs100:5.3, protein100:0, fat100:0, img:""},
+    {name:"Prugne secche", kcal100:65, carbs100:51.2, protein100:0, fat100:0, img:""},
+    {name:"Zucchina", kcal100:15, carbs100:0, protein100:0, fat100:0, img:""}
+];
+
+let recipeDB = {};
+let diary = {};
+let currentDate = new Date().toISOString().split("T")[0];
+let currentMealForRecipe = null;
+
+// --- CONFIGURAZIONE CHIAVI JSONBin (INSERITE) ---
+const JSONBIN_BIN_ID = "6912f6b1d0ea881f40e14975"; 
+const JSONBIN_MASTER_KEY = "$2a$10$/oqt/konWBpXfYJhVx2EHONSYiQZCSS8PCD7IqU3yPAkckNuE8lP2"; // Chiave di Scrittura (X-Master-Key)
+const JSONBIN_READ_KEY = "$2a$10$ClNFWbnoyUzJUFS5AsSv0.PsFdhP3D4PjGFXHiLChKSA9j0.TPakq"; // Chiave di Lettura (X-Access-Key)
+
+
+// --- Funzioni di utilità
+function updateFoodList(){
+    const list = document.getElementById('foodList');
+    list.innerHTML="";
+    foodDB.forEach(f=>{
+        const opt = document.createElement('option');
+        opt.value = f.name;
+        list.appendChild(opt);
+    });
+}
+
+function initDiaryForDate(date){
+    if(!diary[date]) diary[date]={};
+    MEALS.forEach(m=>{
+        if(!diary[date][m]) diary[date][m]=[];
+    });
+}
+
+function renderDiary(){
+    const container = document.getElementById('diaryContainer');
+    container.innerHTML="";
+    MEALS.forEach(meal=>{
+        let mealDiv = document.createElement('div');
+        mealDiv.className="meal";
+        mealDiv.innerHTML = `<h2>${meal}</h2>
+            <input type="text" id="input-${meal}" placeholder="Nome alimento..." list="foodList">
+            <input type="number" id="qty-${meal}" placeholder="Quantità (g/ml)" style="width:120px;">
+            <button onclick="addFood('${meal}')">➕ Aggiungi alimento</button>
+            <button onclick="insertDefault('${meal}')">📌 Inserisci schema predefinito</button>
+            <div class="itemsContainer" id="items-${meal}"></div>
+            <div class="mealTotals" id="totals-${meal}"></div>
+            <div class="recipeDiv" id="recipe-${meal}"></div>`;
+        container.appendChild(mealDiv);
+        updateMeal(meal);
+    });
+    updateDayTotals();
+    showSport();
+}
+
+// --- Funzione di salvataggio locale AUTOMATICO (chiamata ad ogni modifica)
+function autoSaveKawaii(){
+    initDiaryForDate(currentDate);
+    const allData = { diary, foodDB, recipeDB, savedAt: new Date().toISOString() };
+    try {
+        localStorage.setItem("kawaiiAllData", JSON.stringify(allData));
+    } catch (e) {
+        console.warn("Impossibile salvare localmente:", e);
+    }
+}
+
+// --- Alimenti
+function addFood(meal){
+    const name = document.getElementById(`input-${meal}`).value.trim();
+    const qty = parseFloat(document.getElementById(`qty-${meal}`).value);
+    if(!name || isNaN(qty) || qty<=0){ alert("Inserisci nome e quantità valida"); return; }
+    const f = foodDB.find(x => x.name.toLowerCase()===name.toLowerCase());
+    if(!f){ alert("Alimento non trovato"); return; }
+    diary[currentDate][meal].push({...f, quantity:qty});
+    document.getElementById(`input-${meal}`).value="";
+    document.getElementById(`qty-${meal}`).value="";
+    updateMeal(meal);
+    autoSaveKawaii(); 
+}
+
+function insertDefault(meal){
+    const defaults = {
+        "Colazione":[{name:"Kiwi",quantity:80},{name:"Zucca",quantity:66},{name:"Fragole",quantity:100},{name:"Prugne secche",quantity:60}],
+        "Pranzo":[{name:"Zucca",quantity:200},{name:"Zucchina",quantity:450}],
+        "Cena":[{name:"Zucca",quantity:200},{name:"Zucchina",quantity:450}],
+        "Merenda":[{name:"Kiwi",quantity:160},{name:"Fragole",quantity:100}],
+        "Dopocena":[{name:"Kiwi",quantity:80},{name:"Fragole",quantity:50}],
+        "Spuntino":[{name:"Fragole",quantity:50}]
+    };
+    defaults[meal].forEach(d=>{
+        const f = foodDB.find(x=>x.name===d.name);
+        if(f) diary[currentDate][meal].push({...f,quantity:d.quantity,isDefault:true});
+    });
+    updateMeal(meal);
+    autoSaveKawaii(); 
+}
+
+function editFoodInMeal(meal,index){
+    const f = diary[currentDate][meal][index];
+    const newQty = parseFloat(prompt(`Quantità di ${f.name} (g/ml):`, f.quantity));
+    if(!isNaN(newQty) && newQty>0){
+        diary[currentDate][meal][index].quantity = newQty;
+        updateMeal(meal);
+        autoSaveKawaii(); 
+    }
+}
+
+function removeFood(meal,index){
+    if(confirm("Vuoi eliminare questo alimento?")){
+        diary[currentDate][meal].splice(index,1);
+        updateMeal(meal);
+        autoSaveKawaii(); 
+    }
+}
+
+function updateMeal(meal){
+    const container = document.getElementById(`items-${meal}`);
+    container.innerHTML="";
+    let totalKcal=0, totalCarbs=0, totalProt=0, totalFat=0;
+    diary[currentDate][meal].forEach((f,i)=>{
+        const kcal = f.kcal100*f.quantity/100;
+        const carbs = f.carbs100*f.quantity/100;
+        const prot = f.protein100*f.quantity/100;
+        const fat = f.fat100*f.quantity/100;
+        totalKcal += kcal; totalCarbs += carbs; totalProt += prot; totalFat += fat;
+        const div = document.createElement('div');
+        div.className="item";
+        div.innerHTML = `<b>${f.name}</b><br>🍴 ${f.quantity}g/ml<br>🔥 ${kcal.toFixed(1)} kcal<br>🍞 ${carbs.toFixed(1)}g<br>🥚 ${prot.toFixed(1)}g<br>🥑 ${fat.toFixed(1)}g
+            <button style="top:2px; right:22px;" onclick="editFoodInMeal('${meal}',${i})">✏️</button>
+            <button onclick="removeFood('${meal}',${i})">🗑️</button>`;
+        container.appendChild(div);
+    });
+
+    document.getElementById(`totals-${meal}`).innerHTML = `Totale: 🔥 ${totalKcal.toFixed(1)} kcal | 🍞 ${totalCarbs.toFixed(1)} g | 🥚 ${totalProt.toFixed(1)} g | 🥑 ${totalFat.toFixed(1)} g`;
+
+    // Ricetta pasto
+    const recipeDiv = document.getElementById(`recipe-${meal}`);
+    recipeDiv.innerHTML = `<button onclick="openRecipeModal('${meal}')">📖 Aggiungi/Seleziona ricetta</button>`;
+    if(diary[currentDate][meal].recipe && recipeDB[diary[currentDate][meal].recipe]){
+        const r = recipeDB[diary[currentDate][meal].recipe];
+        recipeDiv.innerHTML += `<br><b>📖 ${diary[currentDate][meal].recipe}</b><br>🍳 Ingredienti: ${r.ingredients}<br>📝 Procedimento: ${r.procedure}<br>⏱️ Tempo: ${r.cookTime}<br>🔥 Metodo: ${r.method}${r.img?`<br><a href="${r.img}" target="_blank">🔗 Immagine</a>`:""}`;
+    }
+    updateDayTotals();
+}
+
+function updateDayTotals(){
+    let totalKcal=0, totalCarbs=0, totalProt=0, totalFat=0;
+    let selKcal=0, selCarbs=0, selProt=0, selFat=0;
+    MEALS.forEach(meal=>{
+        if (diary[currentDate][meal]) {
+            diary[currentDate][meal].forEach(f=>{
+                const kcal = f.kcal100*f.quantity/100;
+                const carbs = f.carbs100*f.quantity/100;
+                const prot = f.protein100*f.quantity/100;
+                const fat = f.fat100*f.quantity/100;
+                totalKcal += kcal; totalCarbs += carbs; totalProt += prot; totalFat += fat;
+                if(!f.isDefault){ selKcal += kcal; selCarbs += carbs; selProt += prot; selFat += fat; }
+            });
+        }
+    });
+    document.getElementById('totals-day').innerHTML = `<b>Totale giornata:</b> 🔥 ${totalKcal.toFixed(1)} kcal | 🍞 ${totalCarbs.toFixed(1)} g | 🥚 ${totalProt.toFixed(1)} g | 🥑 ${totalFat.toFixed(1)} g<br><b>Totale selezionato:</b> 🔥 ${selKcal.toFixed(1)} kcal | 🍞 ${selCarbs.toFixed(1)} g | 🥚 ${selProt.toFixed(1)} g | 🥑 ${selFat.toFixed(1)} g`;
+}
+
+// --- Sport
+function showSport(){
+    const existing = document.querySelector('.sportDiv');
+    if(existing) existing.remove();
+    const div = document.createElement('div');
+    div.className="sportDiv";
+    div.innerHTML = `🏃‍♂️ Attività fisica consigliata:<br>`;
+    
+    let totalKcalDay = 0;
+    MEALS.forEach(meal=>{
+        let kcal=0;
+        if (diary[currentDate][meal]) {
+            diary[currentDate][meal].forEach(f=>{ kcal += f.kcal100*f.quantity/100; });
+        }
+        totalKcalDay += kcal;
+    });
+
+    if (totalKcalDay > 0) {
+        div.innerHTML += `<b>Totale Calorico Giornaliero:</b> 🔥 ${totalKcalDay.toFixed(1)} kcal<br>`;
+        div.innerHTML += `<b>Tempo Attività Necessario:</b><br>`;
+        activities.forEach(act=>{
+            div.innerHTML += `- ${act.name}: ${Math.ceil(totalKcalDay/act.kcalPerMin)} min<br>`;
+        });
+    } else {
+        div.innerHTML += `Non ci sono ancora calorie registrate per oggi.`;
+    }
+
+    document.body.appendChild(div);
+}
+
+// --- Ricette
+function openRecipeModal(meal){
+    currentMealForRecipe = meal;
+    document.getElementById('recipeName').value="";
+    document.getElementById('recipeIngredients').value="";
+    document.getElementById('recipeProcedure').value="";
+    document.getElementById('recipeCookTime').value="";
+    document.getElementById('recipeMethod').value="";
+    document.getElementById('recipeImg').value="";
+    const sel = document.getElementById('existingRecipeSelect');
+    sel.innerHTML = `<option value="">--Seleziona ricetta esistente--</option>`;
+    Object.keys(recipeDB).sort().forEach(r=>{
+        sel.innerHTML += `<option value="${r}">${r}</option>`;
+    });
+    sel.onchange = function(){
+        const r = recipeDB[this.value];
+        if(r){
+            document.getElementById('recipeName').value = this.value;
+            document.getElementById('recipeIngredients').value = r.ingredients;
+            document.getElementById('recipeProcedure').value = r.procedure;
+            document.getElementById('recipeCookTime').value = r.cookTime;
+            document.getElementById('recipeMethod').value = r.method;
+            document.getElementById('recipeImg').value = r.img;
+        }
+    };
+    document.getElementById('recipeModal').style.display='flex';
+}
+
+function saveRecipeForMeal(){
+    const name = document.getElementById('recipeName').value.trim();
+    if(!name){ alert("Inserisci un nome per la ricetta"); return; }
+    recipeDB[name] = {
+        ingredients: document.getElementById('recipeIngredients').value.trim(),
+        procedure: document.getElementById('recipeProcedure').value.trim(),
+        cookTime: document.getElementById('recipeCookTime').value.trim(),
+        method: document.getElementById('recipeMethod').value.trim(),
+        img: document.getElementById('recipeImg').value.trim()
+    };
+    diary[currentDate][currentMealForRecipe].recipe = name;
+    closeRecipeModal();
+    updateMeal(currentMealForRecipe);
+    autoSaveKawaii(); 
+}
+
+function deleteRecipeForMeal(){
+    const name = document.getElementById('recipeName').value.trim();
+    if(name && confirm("Vuoi eliminare questa ricetta?")){
+        delete recipeDB[name];
+        // Rimuovi il riferimento alla ricetta dal pasto corrente se corrisponde
+        if(diary[currentDate][currentMealForRecipe] && diary[currentDate][currentMealForRecipe].recipe === name){
+            delete diary[currentDate][currentMealForRecipe].recipe;
+        }
+        // Rimuovi il riferimento da tutti i pasti nel diario che la usano
+        Object.keys(diary).forEach(date => {
+            MEALS.forEach(meal => {
+                if(diary[date][meal] && diary[date][meal].recipe === name){
+                    delete diary[date][meal].recipe;
+                }
+            });
+        });
+
+        closeRecipeModal();
+        updateMeal(currentMealForRecipe);
+        autoSaveKawaii(); 
+    }
+}
+
+function closeRecipeModal(){
+    document.getElementById('recipeModal').style.display='none';
+}
+
+// Mostra tutte le ricette
+function showAllRecipes(){
+    const container = document.getElementById('allRecipesContainer');
+    container.innerHTML="";
+    if (Object.keys(recipeDB).length === 0) {
+        container.innerHTML = "<p>Nessuna ricetta salvata.</p>";
+    } else {
+        Object.keys(recipeDB).sort().forEach(r=>{
+            const rec = recipeDB[r];
+            const div = document.createElement('div');
+            div.className="recipeDiv";
+            div.innerHTML = `<b>${r}</b><br>Ingredienti: ${rec.ingredients.replace(/\n/g, ', ')}<br>Procedimento: ${rec.procedure}<br>⏱️ Tempo: ${rec.cookTime}<br>Metodo: ${rec.method}${rec.img?`<br><a href="${rec.img}" target="_blank">🔗 Immagine</a>`:""}`;
+            container.appendChild(div);
+        });
+    }
+    document.getElementById('allRecipesModal').style.display='flex';
+}
+function closeAllRecipesModal(){ document.getElementById('allRecipesModal').style.display='none'; }
+
+// --- Tabelle nutrizionali
+function showNutritionModal(){
+    const table = document.getElementById('nutritionTable');
+    table.innerHTML = `<tr><th>Alimento</th><th>Kcal/100g</th><th>Carbs</th><th>Proteine</th><th>Grassi</th><th>Azioni</th></tr>`;
+    foodDB.forEach((f,i)=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${f.name}</td>
+                        <td>${f.kcal100}</td>
+                        <td>${f.carbs100}</td>
+                        <td>${f.protein100}</td>
+                        <td>${f.fat100}</td>
+                        <td>
+                          <button onclick="editFoodTable(${i})">✏️</button>
+                          <button onclick="removeFoodTable(${i})">🗑️</button>
+                        </td>`;
+        table.appendChild(tr);
+    });
+    document.getElementById('nutritionModal').style.display='flex';
+}
+
+function editFoodTable(i){
+    const f = foodDB[i];
+    const name = prompt("Nome alimento:", f.name);
+    if(!name) return;
+    const kcal = parseFloat(prompt("Kcal/100g:", f.kcal100));
+    const carbs = parseFloat(prompt("Carbs/100g:", f.carbs100));
+    const protein = parseFloat(prompt("Proteine/100g:", f.protein100));
+    const fat = parseFloat(prompt("Grassi/100g:", f.fat100));
+    foodDB[i] = {name, kcal100:kcal, carbs100:carbs, protein100:protein, fat100:fat, img:f.img};
+    updateFoodList();
+    showNutritionModal();
+    autoSaveKawaii(); 
+}
+
+function removeFoodTable(i){
+    if(confirm("Vuoi eliminare questo alimento?")){
+        foodDB.splice(i,1);
+        updateFoodList();
+        showNutritionModal();
+        autoSaveKawaii(); 
+    }
+}
+function addNewFood(){
+    const name = prompt("Nome alimento:");
+    if(!name) return;
+    const kcal = parseFloat(prompt("Kcal/100g:"));
+    const carbs = parseFloat(prompt("Carbs/100g:"));
+    const protein = parseFloat(prompt("Proteine/100g:"));
+    const fat = parseFloat(prompt("Grassi/100g:"));
+    if (isNaN(kcal) || isNaN(carbs) || isNaN(protein) || isNaN(fat)) {
+         alert("Valori nutrizionali non validi. Riprova.");
+         return;
+    }
+    foodDB.push({name,kcal100:kcal,carbs100:carbs,protein100:protein,fat100:fat,img:""});
+    updateFoodList();
+    showNutritionModal();
+    autoSaveKawaii(); 
+    alert("🍎 Nuovo alimento salvato nel database!");
+}
+function closeNutritionModal(){
+    document.getElementById('nutritionModal').style.display='none';
+    updateFoodList();
+}
+
+// --- Gestione data
+function changeDay(date){
+    currentDate = date;
+    initDiaryForDate(currentDate);
+    renderDiary();
+}
+
+// --- Sincronizzazione JSONBin (robusta, compatibile iPhone + fallback locale) ---
+// La funzione salva sempre localmente prima di provare il cloud
+function saveSyncJSONBin() {
+    initDiaryForDate(currentDate);
+    const allData = { diary, foodDB, recipeDB, savedAt: new Date().toISOString() };
+    
+    // 1. Salva localmente sempre
+    try {
+      localStorage.setItem("kawaiiAllData", JSON.stringify(allData));
+    } catch (e) {
+      console.warn("Impossibile salvare localmente:", e);
+    }
+    
+    // 2. Tenta sincronizzazione remota su JSONBin
+    fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Master-Key": JSONBIN_MASTER_KEY // Chiave di scrittura
+        },
+        body: JSON.stringify(allData)
+    })
+    .then(async (res) => {
+        const text = await res.text();
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${text}`);
+        }
+        alert("✅ Dati sincronizzati con successo su Cloud!");
+        console.log("✅ JSONBin PUT OK:", text);
+    })
+    .catch((err) => {
+        console.error("❌ Errore sincronizzazione Cloud (PUT):", err);
+        alert("⚠️ Non è stato possibile sincronizzare su Cloud. Dati salvati solo localmente come fallback.");
+    });
+}
+
+// La funzione carica da Cloud, se fallisce, carica dal locale
+function loadSyncJSONBin(){
+    // 1. Prova a caricare da JSONBin usando la Read Key (più compatibile)
+    fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+        method: "GET",
+        headers: {
+            "X-Access-Key": JSONBIN_READ_KEY // Chiave di lettura
+        },
+        mode: "cors"
+    })
+    .then(res => {
+        if(!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
+    })
+    .then(data => {
+        if(!data || !data.record) throw new Error("Record Cloud vuoto");
+        const rec = data.record;
+        diary = rec.diary || {};
+        foodDB = rec.foodDB || [];
+        recipeDB = rec.recipeDB || {};
+        
+        initDiaryForDate(currentDate);
+        updateFoodList();
+        renderDiary();
+        
+        // Salva copia locale aggiornata
+        autoSaveKawaii(); 
+        alert("📂 Dati caricati da Cloud!");
+    })
+    .catch(err => {
+        console.warn("❌ Errore caricamento Cloud (GET):", err);
+        
+        // 2. fallback: prova a caricare da localStorage
+        try {
+            const data = localStorage.getItem("kawaiiAllData");
+            if(data){
+                const all = JSON.parse(data);
+                diary = all.diary || {};
+                foodDB = all.foodDB || [];
+                recipeDB = all.recipeDB || {};
+                
+                initDiaryForDate(currentDate);
+                updateFoodList();
+                renderDiary();
+                alert("📂 Cloud non raggiungibile — caricati i dati locali come fallback.");
+            } else {
+                alert("❌ Cloud non raggiungibile e non ci sono dati locali salvati.");
+            }
+        } catch(e){
+            console.error("Errore fallback locale:", e);
+            alert("❌ Errore nel caricamento: controlla console e connessione.");
+        }
+    });
+}
+
+// --- Avvio
+document.addEventListener('DOMContentLoaded', () => {
+    // Prova a caricare i dati locali salvati come fallback o ultima sessione
+    try {
+        const localData = localStorage.getItem("kawaiiAllData");
+        if (localData) {
+            const all = JSON.parse(localData);
+            diary = all.diary || diary;
+            foodDB = all.foodDB || foodDB;
+            recipeDB = all.recipeDB || recipeDB;
+        }
+    } catch (e) {
+        console.error("Errore nel caricamento dei dati locali all'avvio:", e);
+    }
+    
+    // Imposta la data corrente
+    document.getElementById('dateInput').value = currentDate;
+    
+    initDiaryForDate(currentDate);
+    updateFoodList();
+    renderDiary();
+});
+</script>
+
+</body>
+</html>
+
+
+
