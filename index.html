@@ -140,17 +140,34 @@
             background-color: #f0fff0;
             border-radius: 10px;
         }
-        .sportDiv {
+        
+        /* NUOVO STILE: Bottone flottante */
+        #floating-btn {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background-color: var(--kawaii-pink);
-            padding: 15px;
-            border-radius: 20px;
-            box-shadow: 4px 4px 8px var(--kawaii-shadow);
+            background-color: var(--kawaii-accent); /* Fucsia */
+            color: white;
+            border: 4px solid var(--kawaii-pink);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 1.5em;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            cursor: pointer;
             z-index: 1000;
-            border: 2px solid var(--kawaii-accent);
+            animation: pulse 2s infinite;
         }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        /* FINE NUOVO STILE */
+
         .header-actions {
             margin-bottom: 20px;
             display: flex;
@@ -227,6 +244,17 @@
     <div id="diaryContainer" class="container">
         </div>
 
+    <button id="floating-btn" onclick="showSportModal()">🏃‍♀️</button>
+
+    <div id="sportModal" class="modal">
+        <div class="modalContent">
+            <h2>🏃‍♀️ Attività Fisica & Calorie Giornaliere</h2>
+            <div id="sportContent">
+                </div>
+            <button style="margin-top: 15px;" onclick="closeSportModal()">Chiudi</button>
+        </div>
+    </div>
+    
     <div id="nutritionModal" class="modal">
         <div class="modalContent">
             <h2>Database Nutrizionale</h2>
@@ -404,7 +432,7 @@
                 updateMeal(meal);
             });
             updateDayTotals();
-            showSport();
+            // showSport() non è più necessario qui, viene chiamato solo dalla modale
         }
 
         // --- Funzione di salvataggio locale AUTOMATICO (chiamata ad ogni modifica)
@@ -532,35 +560,71 @@
             document.getElementById('totals-day').innerHTML = `<b>Totale giornata:</b> 🔥 ${totalKcal.toFixed(1)} kcal | 🍞 ${totalCarbs.toFixed(1)} g | 🥚 ${totalProt.toFixed(1)} g | 🥑 ${totalFat.toFixed(1)} g<br><b>Totale selezionato:</b> 🔥 ${selKcal.toFixed(1)} kcal | 🍞 ${selCarbs.toFixed(1)} g | 🥚 ${selProt.toFixed(1)} g | 🥑 ${selFat.toFixed(1)} g`;
         }
 
-        // --- Sport
-        function showSport(){
-            const existing = document.querySelector('.sportDiv');
-            if(existing) existing.remove();
-            const div = document.createElement('div');
-            div.className="sportDiv";
-            div.innerHTML = `🏃‍♂️ Attività fisica consigliata:<br>`;
-            
+        // --- NUOVE FUNZIONI SPORT E MODALE ---
+
+        function showSportModal(){
+            const contentDiv = document.getElementById('sportContent');
             let totalKcalDay = 0;
+            const mealKcal = {};
+            
+            // 1. Calcola kcal totali e per pasto
             MEALS.forEach(meal=>{
                 let kcal=0;
                 if (diary[currentDate][meal]) {
                     diary[currentDate][meal].forEach(f=>{ kcal += f.kcal100*f.quantity/100; });
                 }
+                mealKcal[meal] = kcal;
                 totalKcalDay += kcal;
             });
 
+            let htmlContent = ``;
+
             if (totalKcalDay > 0) {
-                div.innerHTML += `<b>Totale Calorico Giornaliero:</b> 🔥 ${totalKcalDay.toFixed(1)} kcal<br>`;
-                div.innerHTML += `<b>Tempo Attività Necessario:</b><br>`;
-                activities.forEach(act=>{
-                    div.innerHTML += `- ${act.name}: ${Math.ceil(totalKcalDay/act.kcalPerMin)} min<br>`;
+                
+                // 2. Totale Giornaliero
+                htmlContent += `<h3 style="color:var(--kawaii-accent);">Riepilogo Calorico Giornaliero:</h3>`;
+                htmlContent += `<p style="font-size:1.2em;"><b>🔥 Totale Assunto:</b> ${totalKcalDay.toFixed(1)} kcal</p>`;
+
+                // 3. Calorie per Pasto
+                htmlContent += `<h3 style="color:var(--kawaii-accent);">Dettaglio Calorie per Pasto:</h3>`;
+                MEALS.forEach(meal => {
+                    if (mealKcal[meal] > 0) {
+                        // Aggiungiamo i minuti di attività per pasto
+                        htmlContent += `<p><b>${meal}:</b> ${mealKcal[meal].toFixed(1)} kcal <span style="font-size: 0.9em; color: #777;">(${activities.map(act => `${Math.ceil(mealKcal[meal]/act.kcalPerMin)} min ${act.name.split(' ')[0]}`).join(', ')})</span></p>`;
+                    }
                 });
+
+                // 4. Attività Fisica Necessaria
+                htmlContent += `<h3 style="color:var(--kawaii-accent);">Minuti di Attività per Bruciare il Totale:</h3>`;
+                htmlContent += `<table style="width:100%; border-collapse: collapse; margin-top:10px;">
+                                    <tr>
+                                        <th style="border:1px solid #ddd; padding:8px; background-color:var(--kawaii-pink); color:#fff;">Attività</th>
+                                        <th style="border:1px solid #ddd; padding:8px; background-color:var(--kawaii-pink); color:#fff;">Tempo Necessario</th>
+                                    </tr>`;
+                
+                activities.forEach(act=>{
+                    const timeNeeded = Math.ceil(totalKcalDay/act.kcalPerMin);
+                    htmlContent += `<tr>
+                                        <td style="border:1px solid #ddd; padding:8px;">${act.name} (Brucia ${act.kcalPerMin} kcal/min)</td>
+                                        <td style="border:1px solid #ddd; padding:8px; font-weight:bold;">${timeNeeded} minuti</td>
+                                    </tr>`;
+                });
+                
+                htmlContent += `</table>`;
+
             } else {
-                div.innerHTML += `Non ci sono ancora calorie registrate per oggi.`;
+                htmlContent += `<p style="color:var(--kawaii-accent); font-weight:bold;">Non ci sono ancora calorie registrate per oggi. Aggiungi i pasti per vedere i dettagli!</p>`;
             }
 
-            document.body.appendChild(div);
+            contentDiv.innerHTML = htmlContent;
+            document.getElementById('sportModal').style.display='flex';
         }
+
+        function closeSportModal(){
+            document.getElementById('sportModal').style.display='none';
+        }
+
+        // --- FINE NUOVE FUNZIONI SPORT ---
 
         // --- Ricette (Gestione Dettaglio Pasto)
         function openRecipeModal(meal, editExisting = false){
