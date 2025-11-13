@@ -20,7 +20,7 @@
             margin: 20px;
             background-color: var(--main-bg-color); /* Sfondo Kawaii */
         }
-        h1, h2 {
+        h1, h2, h3 { /* Aggiunto h3 per i titoli dei gruppi ricette */
             color: var(--kawaii-main-button); /* Titoli in rosa acceso */
             border-bottom: 2px solid var(--kawaii-dark-pink);
             padding-bottom: 5px;
@@ -155,42 +155,99 @@
             min-height: 80px;
         }
         .recipeDiv {
-            border: 2px dashed #90EE90;
+            border: 2px dashed #ffb6c1; /* Light Pink dashed border */
             padding: 10px;
             margin-top: 10px;
-            background-color: #e6ffe6;
+            background-color: #ffeef2; /* Lighter background */
             border-radius: 5px;
         }
         #allRecipesSelect {
             width: 98%;
             margin-bottom: 15px;
         }
-        /* Nuovo stile per le sottocartelle ricette */
-        .recipe-category-heading {
-            background-color: #add8e6;
-            color: #333;
+        
+        /* Stile delle intestazioni di categoria (per Ricette e Alimenti) */
+        .category-heading, .recipe-category-heading {
+            background-color: var(--kawaii-dark-pink); /* Titoli di gruppo ricette */
+            color: white;
             padding: 8px;
             margin-top: 15px;
             margin-bottom: 5px;
             border-radius: 5px;
             font-weight: bold;
-            cursor: pointer;
-            border: 1px solid #90b6c2;
+            border: 1px solid var(--kawaii-main-button);
         }
-        .recipe-list {
+        .item-list, .recipe-list {
             padding-left: 10px;
             border-left: 2px solid #add8e6;
             margin-bottom: 10px;
         }
-        .recipe-item-in-list {
+        .item-in-list, .recipe-item-in-list {
             padding: 8px;
             border-bottom: 1px dotted #ccc;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .recipe-item-in-list:last-child {
+        .item-in-list:last-child, .recipe-item-in-list:last-child {
             border-bottom: none;
+        }
+
+        /* Modale Categorie Ricette (Aggiunta o Modifica) */
+        .recipe-category-selector {
+            border: 1px solid var(--kawaii-dark-pink);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            background-color: #fff;
+        }
+        /* Stili per i Bottoni di Selezione */
+        .recipe-category-selector button, 
+        .all-recipes-button-group button {
+            background-color: #ffb6c1; /* Light Pink */
+            color: #333;
+            border: 1px solid var(--kawaii-dark-pink);
+            margin: 5px 5px 5px 0; /* Margine per separare i bottoni */
+            padding: 8px 10px;
+        }
+        .recipe-category-selector button:hover, 
+        .all-recipes-button-group button:hover {
+             background-color: #ff99aa;
+        }
+        /* Stile per il bottone selezionato (in entrambe le modali) */
+        .recipe-category-selector button.selected,
+        .all-recipes-button-group button.selected {
+             background-color: var(--kawaii-dark-pink);
+             color: white;
+             font-weight: bold;
+        }
+
+        /* Gruppo pulsanti filtro ricette (Modale "Tutte le ricette") - Non più in uso con la select, ma mantenuto lo stile */
+        .all-recipes-button-group {
+            margin-top: 10px;
+            padding: 5px;
+        }
+        
+        #allRecipesFilterButtons {
+            border-bottom: 1px solid var(--kawaii-dark-pink);
+            margin-bottom: 5px;
+        }
+        #allRecipesSubFilterButtons {
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 15px;
+        }
+
+        /* Allineamento Database Alimenti (per renderizzare meglio la lista) */
+        #nutritionContent {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        
+        .nutrition-item-info {
+            flex-grow: 1;
         }
     </style>
 </head>
@@ -216,8 +273,8 @@
     <div id="nutritionModal" class="modal">
         <div class="modalContent">
             <h2>Database Nutrizionale</h2>
-            <table id="nutritionTable" style="width:100%; border-collapse: collapse;">
-                </table>
+            <div id="nutritionContent">
+            </div>
             <button style="margin-top: 15px;" onclick="addNewFood()">➕ Aggiungi Nuovo Alimento</button>
             <button onclick="closeNutritionModal()">Chiudi</button>
         </div>
@@ -227,23 +284,17 @@
         <div class="modalContent">
             <h2>Gestione Ricetta</h2>
 
-            <select id="existingRecipeSelect" style="margin-bottom: 15px;">
+            <select id="existingRecipeSelect" style="margin-bottom: 15px;" onchange="loadRecipeFromSelect()">
                 <option value="">--Seleziona ricetta esistente--</option>
             </select>
 
             <label for="recipeName">Nome Ricetta:</label>
             <input type="text" id="recipeName" placeholder="Es. Torta di Zucca Light">
             
-            <label for="recipeType">Tipo di Ricetta:</label>
-            <select id="recipeType">
-                <option value="Primo">Primo Piatto</option>
-                <option value="Secondo">Secondo Piatto</option>
-                <option value="Dolce">Dolce</option>
-                <option value="Contorno">Contorno</option>
-                <option value="Altro">Altro</option>
-            </select>
+            <div id="recipeCategorySelection" class="recipe-category-selector">
+                </div>
             
-            <label for="recipeIngredients">Ingredienti (separati da virgola o a capo):</label>
+            <input type="hidden" id="recipeType" value="Altro"> <label for="recipeIngredients">Ingredienti (separati da virgola o a capo):</label>
             <textarea id="recipeIngredients" placeholder="Es. 200g farina, 100g zucchero..."></textarea>
             
             <label for="recipeProcedure">Procedimento:</label>
@@ -274,7 +325,7 @@
                 <button id="deleteRecipeBtn" onclick="deleteRecipeFromAll()" disabled>🗑️ Elimina Selezionata</button>
             </div>
 
-            <label for="allRecipesSelect">Seleziona una ricetta per vedere i dettagli/modificarla:</label>
+            <label for="allRecipesSelect">Seleziona una ricetta per vederne i dettagli/modificarla:</label>
             <select id="allRecipesSelect" onchange="displaySelectedRecipe()">
                 <option value="">-- Nessuna ricetta selezionata --</option>
             </select>
@@ -282,8 +333,26 @@
             <div id="recipeDetailContainer" style="margin-top: 15px; margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
                 Seleziona una ricetta sopra per vederne i dettagli.
             </div>
+            
+            <div style="margin-bottom: 15px; padding: 10px; border: 1px solid var(--kawaii-dark-pink); border-radius: 5px; background-color: var(--meal-bg);">
+                <label>Filtri Ricette (Ricette Nascoste, premi il bottone per mostrarle):</label>
+                
+                <label for="recipeCategoryFilter" style="font-weight: bold; margin-top: 10px;">Categoria Principale:</label>
+                <select id="recipeCategoryFilter" style="width: 100%; margin-bottom: 10px;" onchange="updateSubTypeFilter(this.value)">
+                    <option value="">-- Tutte le Categorie --</option>
+                    </select>
+                
+                <div id="subTypeFilterContainer" style="display: none;">
+                    <label for="recipeSubTypeFilter" style="font-weight: bold; margin-top: 10px;">Tipo Specifico:</label>
+                    <select id="recipeSubTypeFilter" style="width: 100%; margin-bottom: 10px;">
+                        <option value="">-- Tutti i Tipi --</option>
+                        </select>
+                </div>
 
-            <div id="allRecipesContainer">
+                <button onclick="filterAllRecipes()">Mostra/Aggiorna Ricette</button>
+            </div>
+            
+            <div id="allRecipesContainer" style="display: none;"> 
                 </div>
             
             <button style="margin-top: 20px;" onclick="closeAllRecipesModal()">Chiudi</button>
@@ -304,7 +373,22 @@
     <script>
         // --- Costanti e variabili
         const MEALS = ["Colazione","Spuntino","Pranzo","Merenda","Cena","Dopocena"];
-        const RECIPE_TYPES = ["Primo", "Secondo", "Dolce", "Contorno", "Altro"]; 
+        
+        // STRUTTURA DATI PER LE CATEGORIE RICETTE (Mappa Categoria Principale -> Sottotipi)
+        const RECIPE_CATEGORY_MAP = {
+            "Primo": ["Avena", "Grano Saraceno", "Mais", "Quinoa", "Miglio"], 
+            "Secondo": ["Carni Bianche", "Affettato", "Albume", "Formaggio", "Pesce", "Legumi"],
+            "Contorno": ["Zucchine", "Zucca", "Mix", "Fagiolini", "Carciofi", "Rape Rosse", "Spinaci"],
+            "Dolce": ["Creme", "Tortino", "Frutta"], 
+            "Altro": ["Altro"] 
+        };
+        
+        // Categorie principali per il raggruppamento
+        const MAIN_RECIPE_TYPES = Object.keys(RECIPE_CATEGORY_MAP); 
+
+        // CATEGORIE ALIMENTI
+        const FOOD_CATEGORIES = ["Cereali/Amidi", "Frutta", "Verdura", "Proteine Bianche", "Proteine Rosse", "Grassi/Oli", "Altro"];
+
         const activities = [
             {name:"Tapis roulant", kcalPerMin:10},
             {name:"Ballo Caraibico", kcalPerMin:8},
@@ -314,29 +398,38 @@
             {name:"Yoga", kcalPerMin:3}
         ];
 
-        // Dati iniziali (saranno sovrascritti dal localStorage o JSONBin)
+        // Dati iniziali 
         let foodDB = [
-            {name:"Kiwi", kcal100:49, carbs100:9, protein100:0, fat100:0, img:""},
-            {name:"Zucca", kcal100:30, carbs100:6.9, protein100:0, fat100:0, img:""},
-            {name:"Fragole", kcal100:30, carbs100:5.3, protein100:0, fat100:0, img:""},
-            {name:"Prugne secche", kcal100:65, carbs100:51.2, protein100:0, fat100:0, img:""},
-            {name:"Zucchina", kcal100:15, carbs100:0, protein100:0, fat100:0, img:""}
+            {name:"Kiwi", kcal100:49, carbs100:9, protein100:0, fat100:0, img:"", category:"Frutta"},
+            {name:"Zucca", kcal100:30, carbs100:6.9, protein100:0, fat100:0, img:"", category:"Verdura"},
+            {name:"Fragole", kcal100:30, carbs100:5.3, protein100:0, fat100:0, img:"", category:"Frutta"},
+            {name:"Prugne secche", kcal100:65, carbs100:51.2, protein100:0, fat100:0, img:"", category:"Frutta"},
+            {name:"Zucchina", kcal100:15, carbs100:0, protein100:0, fat100:0, img:"", category:"Verdura"},
+            {name:"Pollo (petto)", kcal100:165, carbs100:0, protein100:31, fat100:3.6, img:"", category:"Proteine Bianche"},
+            {name:"Avena", kcal100:389, carbs100:66.3, protein100:16.9, fat100:6.9, img:"", category:"Cereali/Amidi"}
         ];
 
         let recipeDB = {
-            "Pasta al Pesto Leggero": { 
+            "Pasta di Mais": { 
                 ingredients: "Pasta, pesto, pomodorini", 
                 procedure: "Cuoci la pasta, condisci con il pesto e aggiungi i pomodorini freschi.", 
                 cookTime: "15 minuti", 
                 method: "Bollitura",
-                type: "Primo" 
+                type: "Primo: Mais" 
             },
             "Petto di Pollo al Limone": { 
                 ingredients: "Petto di pollo, limone, olio, sale", 
                 procedure: "Cuoci il pollo in padella, sfuma con il limone.", 
                 cookTime: "10 minuti", 
                 method: "Padella",
-                type: "Secondo" 
+                type: "Secondo: Carni Bianche" 
+            },
+            "Purea di Zucca": { 
+                ingredients: "Zucca, acqua, noce moscata", 
+                procedure: "Lessare e frullare.", 
+                cookTime: "30 minuti", 
+                method: "Bollitura",
+                type: "Contorno: Zucca" 
             }
         };
 
@@ -345,13 +438,30 @@
         let currentMealForRecipe = null;
         let currentRecipeToEdit = null;
 
-        // --- CONFIGURAZIONE CHIAVI JSONBin (AGGIORNATE CON I TUOI DATI)
+        // Variabili di stato per la modale ricette (Gestione Ricetta)
+        let currentRecipeMainType = null;
+        let currentRecipeSubType = null;
+        
+        // --- CONFIGURAZIONE CHIAVI JSONBin (AGGIORNATE CON LE TUE CREDENZIALI)
         const JSONBIN_BIN_ID = "6912f6b1d0ea881f40e14975"; 
         const JSONBIN_MASTER_KEY = "$2a$10$/oqt/konWBpXfYJhVx2EHONSYiQZCSS8PCD7IqU3yPAkckNuE8lP2"; 
         const JSONBIN_READ_KEY = "$2a$10$ClNFWbnoyUzJUFS5AsSv0.PsFdhP3D4PjGFXHiLChKSA9j0.TPakq"; 
 
-
         // --- Funzioni di utilità
+        
+        // Helper per estrarre il tipo principale (es. "Primo" da "Primo: Avena")
+        function getMainType(type) {
+            const parts = type.split(':');
+            return parts.length > 1 ? parts[0].trim() : type;
+        }
+        
+        // Helper per estrarre il sottotipo (es. "Avena" da "Primo: Avena")
+        function getSubType(type) {
+            const parts = type.split(':');
+            // Se non c'è il : prende tutto il tipo (es. "Altro")
+            return parts.length > 1 ? parts[1].trim() : type;
+        }
+
         function updateFoodList(){
             const list = document.getElementById('foodList');
             list.innerHTML="";
@@ -400,7 +510,7 @@
             }
         }
 
-        // --- Alimenti
+        // --- Alimenti (Logica)
         function addFood(meal){
             const name = document.getElementById(`input-${meal}`).value.trim();
             const qty = parseFloat(document.getElementById(`qty-${meal}`).value);
@@ -452,7 +562,7 @@
                 autoSaveKawaii(); 
             }
         }
-
+        
         function updateMeal(meal){
             const container = document.getElementById(`items-${meal}`);
             container.innerHTML="";
@@ -465,7 +575,6 @@
                 totalKcal += kcal; totalCarbs += carbs; totalProt += prot; totalFat += fat;
                 const div = document.createElement('div');
                 div.className="item";
-                // Bottoni con classi corrette (rimangono rosa tondi)
                 div.innerHTML = `<b>${f.name}</b><br>🍴 ${f.quantity}g/ml<br>🔥 ${kcal.toFixed(1)} kcal<br>🍞 ${carbs.toFixed(1)}g<br>🥚 ${prot.toFixed(1)}g<br>🥑 ${fat.toFixed(1)}g
                     <button class="edit-btn" onclick="editFoodInMeal('${meal}',${i})">✏️</button>
                     <button class="delete-btn" onclick="removeFood('${meal}',${i})">🗑️</button>`;
@@ -476,7 +585,7 @@
 
             // Ricetta pasto
             const recipeDiv = document.getElementById(`recipe-${meal}`);
-            if(diary[currentDate][meal].recipe && recipeDB[diary[currentDate][meal].recipe]){
+            if (diary[currentDate][meal].recipe && recipeDB[diary[currentDate][meal].recipe]) {
                 const r = recipeDB[diary[currentDate][meal].recipe];
                 const recipeName = diary[currentDate][meal].recipe;
 
@@ -484,9 +593,9 @@
                     <button onclick="openRecipeModal('${meal}', true)">✏️ Modifica Ricetta</button>
                     <button onclick="deleteRecipeForMeal('${meal}')">🗑️ Rimuovi Ricetta dal Pasto</button>
                     <br>
-                    <b>📖 ${recipeName}</b> (${r.type || 'N/D'})<br>
-                    🍳 Ingredienti: ${r.ingredients}<br>
-                    📝 Procedimento: ${r.procedure}<br>
+                    <b>📖 ${recipeName}</b> (${getSubType(r.type) || 'N/D'})<br>
+                    🍳 Ingredienti: ${r.ingredients.substring(0, 50)}...<br>
+                    📝 Procedimento: ${r.procedure.substring(0, 50)}...<br>
                     ⏱️ Tempo: ${r.cookTime}<br>
                     🔥 Metodo: ${r.method}
                     ${r.img?`<br><a href="${r.img}" target="_blank">🔗 Immagine</a>`:""}`;
@@ -499,7 +608,6 @@
 
         function updateDayTotals(){
             let totalKcal=0, totalCarbs=0, totalProt=0, totalFat=0;
-            let selKcal=0, selCarbs=0, selProt=0, selFat=0;
             MEALS.forEach(meal=>{
                 if (diary[currentDate][meal]) {
                     diary[currentDate][meal].forEach(f=>{
@@ -508,26 +616,109 @@
                         const prot = f.protein100*f.quantity/100;
                         const fat = f.fat100*f.quantity/100;
                         totalKcal += kcal; totalCarbs += carbs; totalProt += prot; totalFat += fat;
-                        if(!f.isDefault){ selKcal += kcal; selCarbs += carbs; selProt += prot; selFat += fat; }
                     });
                 }
             });
-            document.getElementById('totals-day').innerHTML = `<b>Totale giornata:</b> 🔥 ${totalKcal.toFixed(1)} kcal | 🍞 ${totalCarbs.toFixed(1)} g | 🥚 ${totalProt.toFixed(1)} g | 🥑 ${totalFat.toFixed(1)} g<br><b>Totale selezionato:</b> 🔥 ${selKcal.toFixed(1)} kcal | 🍞 ${selCarbs.toFixed(1)} g | 🥚 ${selProt.toFixed(1)} g | 🥑 ${selFat.toFixed(1)} g`;
+            document.getElementById('totals-day').innerHTML = `Totale Giornaliero: 🔥 ${totalKcal.toFixed(1)} kcal | 🍞 ${totalCarbs.toFixed(1)} g | 🥚 ${totalProt.toFixed(1)} g | 🥑 ${totalFat.toFixed(1)} g`;
         }
 
-        // --- Sport (MODIFICATO: ora è una modale che si apre)
+        function changeDay(newDate){
+            currentDate = newDate;
+            initDiaryForDate(currentDate);
+            renderDiary();
+        }
+
+        // --- JSONBin (Logica)
+        async function saveSyncJSONBin(){
+            const allData = { diary, foodDB, recipeDB, savedAt: new Date().toISOString() };
+            try {
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': JSONBIN_MASTER_KEY,
+                        'X-Bin-Versioning': 'false' 
+                    },
+                    body: JSON.stringify(allData)
+                });
+                if(response.ok){
+                    alert("✅ Dati salvati con successo sul cloud!");
+                    autoSaveKawaii(); 
+                } else {
+                    const errorText = await response.text();
+                    alert(`❌ Errore nel salvataggio su cloud. Stato: ${response.status}. Controlla la tua Master Key.`);
+                    console.error("Errore salvataggio JSONBin:", response.status, errorText);
+                }
+            } catch(e){
+                alert("❌ Errore di connessione al cloud.");
+                console.error(e);
+            }
+        }
+
+        async function loadSyncJSONBin(){
+            try {
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+                    headers: {
+                        // Utilizziamo la Master Key per assicurare tutti i permessi, superando l'errore precedente.
+                        'X-Master-Key': JSONBIN_MASTER_KEY 
+                    }
+                });
+                if(response.ok){
+                    const data = await response.json();
+                    if(data.record){
+                        const all = data.record;
+                        diary = all.diary || diary;
+                        foodDB = all.foodDB || foodDB;
+                        recipeDB = all.recipeDB || recipeDB;
+                        
+                        initDiaryForDate(currentDate);
+                        updateFoodList();
+                        renderDiary();
+                        alert(`✅ Dati caricati dal cloud (salvati il ${new Date(all.savedAt).toLocaleDateString()} alle ${new Date(all.savedAt).toLocaleTimeString()}).`);
+                        autoSaveKawaii(); 
+                    } else {
+                         alert("❌ Cloud raggiungibile, ma i dati sono vuoti.");
+                    }
+                } else {
+                    // Se la risposta NON è ok (es. 401, 403, 404), generiamo un errore per attivare il catch
+                    console.error("Errore HTTP nel caricamento cloud:", response.status, await response.text());
+                    throw new Error("Cloud non raggiungibile o non autorizzato."); 
+                }
+            } catch(e){
+                // Fallback locale in caso di errore di connessione o errore HTTP 401/403
+                console.error("Errore nel caricamento cloud, tentativo di fallback locale:", e);
+                const localData = localStorage.getItem("kawaiiAllData");
+                if (localData) {
+                    const all = JSON.parse(localData);
+                    diary = all.diary || diary;
+                    foodDB = all.foodDB || foodDB;
+                    recipeDB = all.recipeDB || recipeDB;
+                    
+                    initDiaryForDate(currentDate);
+                    updateFoodList();
+                    renderDiary();
+                    alert("📂 Cloud non raggiungibile — caricati i dati locali come fallback.");
+                } else {
+                    alert("❌ Cloud non raggiungibile e non ci sono dati locali salvati.");
+                }
+            }
+        }
+
+
+        // --- Sport (Logica)
         function calculateSport(){
             let totalKcalDay = 0;
             MEALS.forEach(meal=>{
                 let kcal=0;
                 if (diary[currentDate][meal]) {
-                    diary[currentDate][meal].forEach(f=>{ kcal += f.kcal100*f.quantity/100; });
+                    diary[currentDate][meal].forEach(f=>{
+                        kcal += f.kcal100*f.quantity/100;
+                    });
                 }
                 totalKcalDay += kcal;
             });
 
             const contentDiv = document.getElementById('sportContent');
-            
             if (totalKcalDay > 0) {
                 let html = `<b>Totale Calorico Giornaliero:</b> 🔥 ${totalKcalDay.toFixed(1)} kcal<br>`;
                 html += `<b>Tempo Attività Necessario per Bruciarle:</b><br>`;
@@ -539,7 +730,7 @@
                 contentDiv.innerHTML = `Non ci sono ancora calorie registrate per oggi. Inserisci gli alimenti per vedere i consigli.`;
             }
         }
-        
+
         function toggleSportModal() {
             calculateSport(); // Ricalcola i totali prima di mostrare
             const modal = document.getElementById('sportModal');
@@ -550,20 +741,84 @@
             }
         }
 
+        // --- Ricette (Logica di selezione con pulsanti - Modale Aggiungi/Modifica)
 
-        // --- Ricette (Gestione Dettaglio Pasto)
+        function renderRecipeTypeSelection(level, mainType = null) {
+            const container = document.getElementById('recipeCategorySelection');
+            container.innerHTML = '';
+            let html = '';
+
+            if (level === 1) { 
+                // Livello 1: Categoria Principale 
+                html += '<b>1. Seleziona la Categoria Principale:</b><br>';
+                MAIN_RECIPE_TYPES.forEach(type => {
+                    const selectedClass = currentRecipeMainType === type ? ' selected' : '';
+                    html += `<button class="main-type-btn${selectedClass}" onclick="selectMainType('${type}')">${type}</button>`;
+                });
+                
+                if (!currentRecipeMainType) {
+                    document.getElementById('recipeType').value = "Altro";
+                }
+
+            } else if (level === 2 && mainType) { 
+                // Livello 2: Sottocategoria
+                html += `<b>2. Seleziona il Tipo di ${mainType}:</b> `;
+                html += `<button onclick="renderRecipeTypeSelection(1)">↩️ Indietro</button><br>`;
+
+                const subtypes = RECIPE_CATEGORY_MAP[mainType] || [];
+                subtypes.forEach(subType => {
+                    const fullType = `${mainType}: ${subType}`;
+                    const selectedClass = document.getElementById('recipeType').value === fullType ? ' selected' : '';
+                    html += `<button class="sub-type-btn${selectedClass}" onclick="selectSubType('${mainType}', '${subType}')">${subType}</button>`;
+                });
+            }
+
+            container.innerHTML = html;
+        }
+
+        function selectMainType(mainType) {
+            currentRecipeMainType = mainType;
+            currentRecipeSubType = null;
+            
+            const subtypes = RECIPE_CATEGORY_MAP[mainType];
+            const hasSubtypes = subtypes && subtypes.length > 1; 
+            const firstSubType = hasSubtypes ? subtypes[0] : null;
+
+            if (!hasSubtypes || mainType === "Altro" || (subtypes && subtypes.length === 1 && subtypes[0] === mainType)) {
+                // Se non ci sono sottotipi o è "Altro"
+                document.getElementById('recipeType').value = mainType;
+                currentRecipeSubType = mainType;
+                renderRecipeTypeSelection(1); 
+            } else {
+                // Se ci sono sottotipi, seleziona il primo come predefinito e passa al Livello 2
+                selectSubType(mainType, firstSubType); 
+                renderRecipeTypeSelection(2, mainType);
+            }
+        }
+
+        function selectSubType(mainType, subType) {
+            currentRecipeSubType = subType;
+            const fullType = `${mainType}: ${subType}`;
+            document.getElementById('recipeType').value = fullType;
+            renderRecipeTypeSelection(2, mainType);
+        }
+
         function openRecipeModal(meal, editExisting = false){
             currentMealForRecipe = meal;
-            currentRecipeToEdit = null; 
+            if (!editExisting && meal === null) {
+                currentRecipeToEdit = null;
+            }
 
-            // Pulisce i campi e imposta il tipo di default
+            // Pulisce i campi e resetta gli stati
             document.getElementById('recipeName').value="";
             document.getElementById('recipeIngredients').value="";
             document.getElementById('recipeProcedure').value="";
             document.getElementById('recipeCookTime').value="";
             document.getElementById('recipeMethod').value="";
             document.getElementById('recipeImg').value="";
-            document.getElementById('recipeType').value="Primo"; // Imposta default
+            document.getElementById('recipeType').value="Altro";
+            currentRecipeMainType = null;
+            currentRecipeSubType = null;
 
             // Riempie il selettore delle ricette esistenti
             const sel = document.getElementById('existingRecipeSelect');
@@ -571,12 +826,12 @@
             Object.keys(recipeDB).sort().forEach(r=>{
                 sel.innerHTML += `<option value="${r}">${r}</option>`;
             });
-            
-            // LOGICA DI PRECOMPILAZIONE PER LA MODIFICA
+
             let recipeToLoad = null;
 
             if (editExisting && diary[currentDate][meal] && diary[currentDate][meal].recipe) {
                 recipeToLoad = diary[currentDate][meal].recipe;
+                currentRecipeToEdit = recipeToLoad; 
             } else if (currentRecipeToEdit) {
                 recipeToLoad = currentRecipeToEdit;
             }
@@ -589,32 +844,98 @@
                 document.getElementById('recipeCookTime').value = r.cookTime;
                 document.getElementById('recipeMethod').value = r.method;
                 document.getElementById('recipeImg').value = r.img;
-                document.getElementById('recipeType').value = r.type || "Altro"; 
+                
+                const fullType = r.type || "Altro";
+                document.getElementById('recipeType').value = fullType;
+                currentRecipeMainType = getMainType(fullType);
+                currentRecipeSubType = getSubType(fullType);
+
                 sel.value = recipeToLoad;
+
+                // Determina il livello di visualizzazione dei pulsanti
+                const subtypes = RECIPE_CATEGORY_MAP[currentRecipeMainType];
+                const hasSubtypes = subtypes && subtypes.length > 1; 
+
+                if (hasSubtypes && currentRecipeMainType !== currentRecipeSubType) {
+                    renderRecipeTypeSelection(2, currentRecipeMainType);
+                } else {
+                    renderRecipeTypeSelection(1);
+                }
+            } else {
+                renderRecipeTypeSelection(1);
             }
 
-            // Funzione per precompilare i campi quando si seleziona una ricetta dal select
-            sel.onchange = function(){
-                const r = recipeDB[this.value];
-                if(r){
-                    document.getElementById('recipeName').value = this.value;
-                    document.getElementById('recipeIngredients').value = r.ingredients;
-                    document.getElementById('recipeProcedure').value = r.procedure;
-                    document.getElementById('recipeCookTime').value = r.cookTime;
-                    document.getElementById('recipeMethod').value = r.method;
-                    document.getElementById('recipeImg').value = r.img;
-                    document.getElementById('recipeType').value = r.type || "Altro"; 
-                }
-            };
-
             document.getElementById('recipeModal').style.display='flex';
+        }
+
+        function closeRecipeModal(){
+            document.getElementById('recipeModal').style.display='none';
+        }
+
+        function loadRecipeFromSelect() {
+            const sel = document.getElementById('existingRecipeSelect');
+            const recipeName = sel.value;
+
+            // 1. Pulisce tutti i campi (incluso lo stato interno)
+            document.getElementById('recipeName').value = "";
+            document.getElementById('recipeIngredients').value = "";
+            document.getElementById('recipeProcedure').value = "";
+            document.getElementById('recipeCookTime').value = "";
+            document.getElementById('recipeMethod').value = "";
+            document.getElementById('recipeImg').value = "";
+            document.getElementById('recipeType').value = "Altro";
+            currentRecipeMainType = null;
+            currentRecipeSubType = null;
+            currentRecipeToEdit = null;
+            
+            // 2. Carica i dati della ricetta selezionata
+            if (recipeName && recipeDB[recipeName]) {
+                const r = recipeDB[recipeName];
+                
+                document.getElementById('recipeName').value = recipeName;
+                document.getElementById('recipeIngredients').value = r.ingredients;
+                document.getElementById('recipeProcedure').value = r.procedure;
+                document.getElementById('recipeCookTime').value = r.cookTime;
+                document.getElementById('recipeMethod').value = r.method;
+                document.getElementById('recipeImg').value = r.img;
+                
+                const fullType = r.type || "Altro";
+                document.getElementById('recipeType').value = fullType;
+                currentRecipeMainType = getMainType(fullType);
+                currentRecipeSubType = getSubType(fullType);
+                currentRecipeToEdit = recipeName; 
+                
+                // 3. Ricarica i pulsanti di categoria
+                const subtypes = RECIPE_CATEGORY_MAP[currentRecipeMainType];
+                const hasSubtypes = subtypes && subtypes.length > 1; 
+
+                if (hasSubtypes && currentRecipeMainType !== currentRecipeSubType) {
+                    renderRecipeTypeSelection(2, currentRecipeMainType);
+                } else {
+                    renderRecipeTypeSelection(1);
+                }
+            } else {
+                renderRecipeTypeSelection(1);
+            }
         }
 
         function saveRecipeForMeal(){
             const name = document.getElementById('recipeName').value.trim();
             if(!name){ alert("Inserisci un nome per la ricetta"); return; }
-
+            
             const recipeType = document.getElementById('recipeType').value;
+            const mainType = getMainType(recipeType);
+            const subType = getSubType(recipeType);
+
+            if (RECIPE_CATEGORY_MAP[mainType] && RECIPE_CATEGORY_MAP[mainType].length > 1 && subType === mainType) {
+                alert("⚠️ Seleziona anche il **Tipo** di ricetta (es. Avena, Mais, ecc.).");
+                return;
+            }
+
+            if (!recipeType || !MAIN_RECIPE_TYPES.some(type => recipeType.startsWith(type) || recipeType === "Altro")) {
+                alert("⚠️ Seleziona la Categoria e il Tipo di ricetta prima di salvare.");
+                return;
+            }
 
             recipeDB[name] = {
                 ingredients: document.getElementById('recipeIngredients').value.trim(),
@@ -622,22 +943,28 @@
                 cookTime: document.getElementById('recipeCookTime').value.trim(),
                 method: document.getElementById('recipeMethod').value.trim(),
                 img: document.getElementById('recipeImg').value.trim(),
-                type: recipeType 
+                type: recipeType
             };
-            
+
             if (currentMealForRecipe) {
                 diary[currentDate][currentMealForRecipe].recipe = name;
                 updateMeal(currentMealForRecipe);
             }
-            
+
             currentMealForRecipe = null;
             currentRecipeToEdit = null;
-
             closeRecipeModal();
+            
+            // Aggiorna la modale di tutte le ricette se è aperta
             if(document.getElementById('allRecipesModal').style.display === 'flex') {
-                showAllRecipes();
+                showAllRecipes(); 
+                // Se la lista era visibile, riapplico il filtro per aggiornarla
+                const container = document.getElementById('allRecipesContainer');
+                if(container.style.display !== 'none') {
+                    filterAllRecipes(); // Chiama la versione senza argomenti che legge dal DOM
+                }
             }
-            autoSaveKawaii(); 
+            autoSaveKawaii();
         }
 
         function deleteRecipeForMeal(meal = null){
@@ -645,13 +972,13 @@
             const currentMeal = meal || currentMealForRecipe;
             let nameToDelete = recipeNameInput;
 
-            // Caso 1: Rimuovi riferimento dal Pasto (chiamata dal bottone nel pasto)
+            // Caso 1: Rimuovi riferimento dal Pasto 
             if (meal) {
                 nameToDelete = diary[currentDate][meal].recipe;
-                if (!nameToDelete) return; 
-                
+                if (!nameToDelete) return;
+
                 if(confirm(`Vuoi rimuovere il riferimento alla ricetta '${nameToDelete}' solo dal pasto ${meal}? La ricetta resterà nel database.`)) {
-                     if (diary[currentDate][currentMeal] && diary[currentDate][currentMeal].recipe === nameToDelete) {
+                    if (diary[currentDate][currentMeal] && diary[currentDate][currentMeal].recipe === nameToDelete) {
                         delete diary[currentDate][currentMeal].recipe;
                     }
                     updateMeal(currentMeal);
@@ -659,134 +986,235 @@
                 }
                 return;
             }
-            
-            // Caso 2: Elimina definitivamente dal Database (chiamata dalla modale)
-            if(!nameToDelete) return;
 
-            if(confirm(`Sei sicuro di voler eliminare DEFINITIVAMENTE la ricetta '${nameToDelete}' dal database? Verrà rimossa da tutti i giorni in cui è usata.`)) {
-                delete recipeDB[nameToDelete];
-                
-                Object.keys(diary).forEach(date => {
-                    MEALS.forEach(m => {
-                        if(diary[date][m] && diary[date][m].recipe === nameToDelete){
-                            delete diary[date][m].recipe;
-                        }
+            // Caso 2: Elimina definitivamente dal Database 
+            if (nameToDelete && recipeDB[nameToDelete]) {
+                 if(confirm(`Sei sicuro di voler eliminare DEFINITIVAMENTE la ricetta '${nameToDelete}' dal database? Verrà rimossa da tutti i giorni in cui è usata.`)) {
+                    delete recipeDB[nameToDelete];
+                    
+                    Object.keys(diary).forEach(date => {
+                        MEALS.forEach(m => {
+                            if(diary[date][m] && diary[date][m].recipe === nameToDelete){
+                                delete diary[date][m].recipe;
+                            }
+                        });
                     });
-                });
 
-                currentMealForRecipe = null;
-                currentRecipeToEdit = null;
-
-                closeRecipeModal();
-                if(document.getElementById('allRecipesModal').style.display === 'flex') {
-                    showAllRecipes();
-                } else {
-                    renderDiary(); 
-                }
-                autoSaveKawaii(); 
+                    currentRecipeToEdit = null;
+                    closeRecipeModal();
+                    updateMeal(currentMealForRecipe); 
+                    
+                    if(document.getElementById('allRecipesModal').style.display === 'flex') {
+                        // Aggiorna la vista della modale
+                        showAllRecipes(); 
+                    }
+                    autoSaveKawaii();
+                 }
+            } else {
+                alert("Nessuna ricetta selezionata per l'eliminazione.");
             }
         }
 
-        function closeRecipeModal(){
-            document.getElementById('recipeModal').style.display='none';
+
+        // --- Tutte le Ricette (Logica di Filtro e Visualizzazione)
+        
+        // NUOVA FUNZIONE: Aggiorna il selettore del Tipo Specifico in base alla Categoria Principale
+        function updateSubTypeFilter(mainType) {
+            const container = document.getElementById('subTypeFilterContainer');
+            const subSelect = document.getElementById('recipeSubTypeFilter');
+            subSelect.innerHTML = '<option value="">-- Tutti i Tipi --</option>'; 
+            subSelect.value = ""; // Resetta il valore
+
+            if (mainType && RECIPE_CATEGORY_MAP[mainType]) {
+                const subtypes = RECIPE_CATEGORY_MAP[mainType];
+                
+                // Se c'è un solo sottotipo che è lo stesso del principale (es. "Altro"), nascondi il sotto-filtro
+                if (subtypes.length === 1 && subtypes[0] === mainType) {
+                     container.style.display = 'none';
+                } else {
+                    subtypes.forEach(subType => {
+                        // Il valore del sotto-filtro è la stringa completa "Principale: Sottotipo"
+                        const fullType = `${mainType}: ${subType}`;
+                        subSelect.innerHTML += `<option value="${fullType}">${subType}</option>`;
+                    });
+                    container.style.display = 'block';
+                }
+            } else {
+                container.style.display = 'none';
+            }
         }
 
-        // --- Ricette (Gestione Centralizzata)
-
-        function showAllRecipes(){
+        // Funzione per filtrare e renderizzare (chiamata dal bottone)
+        function filterAllRecipes() {
             const container = document.getElementById('allRecipesContainer');
-            const select = document.getElementById('allRecipesSelect');
-            
-            container.innerHTML = "";
-            select.innerHTML = `<option value="">-- Nessuna ricetta selezionata --</option>`;
-            document.getElementById('recipeDetailContainer').innerHTML = "Seleziona una ricetta sopra per vederne i dettagli.";
-            
-            document.getElementById('editRecipeBtn').disabled = true;
-            document.getElementById('deleteRecipeBtn').disabled = true;
+            const mainFilter = document.getElementById('recipeCategoryFilter').value;
+            const subFilter = document.getElementById('recipeSubTypeFilter').value; // fullType string (es. Primo: Mais)
 
+            container.innerHTML = "";
+            
             if (Object.keys(recipeDB).length === 0) {
                 container.innerHTML = "<p>Nessuna ricetta salvata. Usa il bottone 'Inserisci Nuova Ricetta'.</p>";
-                document.getElementById('allRecipesModal').style.display='flex';
+                container.style.display = 'block';
                 return;
             }
-            
-            // 1. Popola il Selettore Generale 
-            Object.keys(recipeDB).sort().forEach(r=>{
-                select.innerHTML += `<option value="${r}">${r}</option>`;
-            });
 
-            // 2. Crea le sezioni per tipo
+            // 1. Filtra e raggruppa
             const groupedRecipes = {};
-            RECIPE_TYPES.forEach(type => { groupedRecipes[type] = []; });
-            
+            MAIN_RECIPE_TYPES.forEach(type => {
+                // Inizializza i gruppi solo se non c'è un filtro principale, o se il tipo corrisponde al filtro
+                if (!mainFilter || type === mainFilter) {
+                     groupedRecipes[type] = [];
+                }
+            });
+            // Assicurati che il gruppo "Altro" esista se non c'è filtro principale
+             if (!mainFilter) groupedRecipes["Altro"] = [];
+
+
             Object.keys(recipeDB).forEach(name => {
                 const recipe = recipeDB[name];
-                const type = recipe.type && RECIPE_TYPES.includes(recipe.type) ? recipe.type : "Altro";
-                groupedRecipes[type].push({name, ...recipe});
+                const fullType = recipe.type || "Altro";
+                const mainType = getMainType(fullType); 
+                const groupKey = MAIN_RECIPE_TYPES.includes(mainType) ? mainType : "Altro";
+                
+                let shouldInclude = true;
+
+                // Filtro 1: Categoria Principale
+                if (mainFilter && groupKey !== mainFilter) {
+                    shouldInclude = false;
+                }
+
+                // Filtro 2: Tipo Specifico (se impostato, deve corrispondere al fullType)
+                if (shouldInclude && subFilter && fullType !== subFilter) {
+                     shouldInclude = false;
+                }
+
+                if (shouldInclude) {
+                    // Aggiunge al gruppo. Se il mainFilter è attivo, aggiunge solo a quel gruppo.
+                    if (groupedRecipes[groupKey]) {
+                        groupedRecipes[groupKey].push({name, ...recipe});
+                    }
+                }
             });
 
-            // 3. Renderizza le sezioni
+            // 2. Renderizza le sezioni
             let htmlContent = '';
+            let recipesFound = false;
             
-            const orderedTypes = ["Primo", "Secondo", "Contorno", "Dolce", "Altro"];
-            
-            orderedTypes.forEach(type => {
+            // Itera sull'ordine dei tipi principali
+            MAIN_RECIPE_TYPES.forEach(type => {
                 const list = groupedRecipes[type];
                 if (list && list.length > 0) {
-                    htmlContent += `<div class="recipe-category-heading">${type} (${list.length})</div>`;
+                    recipesFound = true;
+                    
+                    // Crea il titolo del gruppo basato sul tipo principale
+                    let displayTitle = type;
+                    if (type === "Primo") displayTitle = "Primi Piatti (Avena, Mais, Grano Saraceno, ecc.)";
+                    else if (type === "Secondo") displayTitle = "Secondi Piatti (Carni, Pesce, Affettati, Legumi, ecc.)";
+                    else if (type === "Contorno") displayTitle = "Contorni (Verdure Varie)";
+                    else if (type === "Dolce") displayTitle = "Dolci (Creme, Torte, Frutta)";
+                    else if (type === "Altro") displayTitle = "Altro";
+
+                    htmlContent += `<h3 class="recipe-category-heading">${displayTitle} (${list.length})</h3>`;
                     htmlContent += `<div class="recipe-list">`;
                     
                     list.sort((a, b) => a.name.localeCompare(b.name)).forEach(r => {
+                        const subTypeDisplay = r.type.split(':').slice(-1)[0].trim();
+                        
                         htmlContent += `
                             <div class="recipe-item-in-list">
-                                <span>${r.name}</span>
-                                <button title="Seleziona e vedi dettagli" onclick="selectRecipeInAllRecipes('${r.name}')">Vedi Dettagli</button>
-                            </div>
-                        `;
+                                <span class="nutrition-item-info">
+                                    <b>${r.name}</b> 
+                                    <span style="font-size: 0.9em; color: #888;">(${subTypeDisplay})</span>
+                                </span>
+                                <button onclick="selectRecipeInAll('${r.name.replace(/'/g, "\\'")}')">Seleziona</button>
+                            </div>`;
                     });
                     htmlContent += `</div>`;
                 }
             });
+            
+            if (!recipesFound) {
+                let filterDisplay = mainFilter || 'Tutte';
+                if (subFilter) filterDisplay += ` -> ${getSubType(subFilter)}`;
+                htmlContent = `<p>Nessuna ricetta trovata per i filtri selezionati: <b>${filterDisplay}</b>.</p>`;
+            }
 
             container.innerHTML = htmlContent;
-            
-            document.getElementById('allRecipesModal').style.display='flex';
+            container.style.display = 'block'; // **MOSTRA il container solo dopo il filtro**
         }
         
-        function selectRecipeInAllRecipes(name) {
-            document.getElementById('allRecipesSelect').value = name;
-            displaySelectedRecipe();
-        }
-
-        function displaySelectedRecipe(){
+        // Funzione per preparare la modale (chiamata all'apertura)
+        function showAllRecipes(){
             const select = document.getElementById('allRecipesSelect');
-            const container = document.getElementById('recipeDetailContainer'); 
-            const name = select.value;
+            const container = document.getElementById('allRecipesContainer');
+            const mainFilterSelect = document.getElementById('recipeCategoryFilter');
             
-            container.innerHTML = "Seleziona una ricetta sopra per vederne i dettagli.";
+            // **NASCONDI la lista di ricette inizialmente**
+            container.innerHTML = ""; 
+            container.style.display = 'none'; 
+
+            // Resetta i campi di selezione
+            select.innerHTML = `<option value="">-- Nessuna ricetta selezionata --</option>`;
+            document.getElementById('recipeDetailContainer').innerHTML = "Seleziona una ricetta sopra per vederne i dettagli.";
             document.getElementById('editRecipeBtn').disabled = true;
             document.getElementById('deleteRecipeBtn').disabled = true;
+
+            // 1. Popola il Selettore Generale (ricette singole)
+            Object.keys(recipeDB).sort().forEach(r=>{
+                select.innerHTML += `<option value="${r}">${r}</option>`;
+            });
             
-            if (name) {
-                const rec = recipeDB[name];
-                if(rec) {
-                    container.innerHTML = `
-                        <div class="recipeDiv">
-                            <b>${name}</b> (${rec.type || 'N/D'})<br>
-                            Ingredienti: ${rec.ingredients.replace(/\n/g, ', ')}<br>
-                            Procedimento: ${rec.procedure}<br>
-                            ⏱️ Tempo: ${rec.cookTime}<br>
-                            Metodo: ${rec.method}
-                            ${rec.img?`<br><a href="${rec.img}" target="_blank">🔗 Immagine</a>`:""}
-                        </div>`;
-                    
-                    document.getElementById('editRecipeBtn').disabled = false;
-                    document.getElementById('deleteRecipeBtn').disabled = false;
-                }
+            // 2. Popola il selettore Categoria Principale
+            const currentMainFilterValue = mainFilterSelect.value;
+            mainFilterSelect.innerHTML = '<option value="">-- Tutte le Categorie --</option>';
+            MAIN_RECIPE_TYPES.forEach(type => {
+                mainFilterSelect.innerHTML += `<option value="${type}" ${type === currentMainFilterValue ? 'selected' : ''}>${type}</option>`;
+            });
+            
+            // 3. Popola il selettore Tipo Specifico e gestisci visibilità
+            updateSubTypeFilter(mainFilterSelect.value); // Inizializza il sub-filtro
+
+            // Resetta la selezione dell'elenco ricette
+            select.value = "";
+
+            document.getElementById('allRecipesModal').style.display='flex';
+        }
+
+
+        function displaySelectedRecipe() {
+            const name = document.getElementById('allRecipesSelect').value;
+            const container = document.getElementById('recipeDetailContainer');
+            document.getElementById('editRecipeBtn').disabled = true;
+            document.getElementById('deleteRecipeBtn').disabled = true;
+
+            if (!name) {
+                container.innerHTML = "Seleziona una ricetta sopra per vederne i dettagli.";
+                return;
+            }
+
+            const r = recipeDB[name];
+            if (r) {
+                container.innerHTML = `
+                    <b>Nome:</b> ${name}<br>
+                    <b>Categoria:</b> ${r.type || 'N/D'}<br>
+                    <b>Ingredienti:</b> ${r.ingredients.replace(/\n/g, '<br>')}<br>
+                    <b>Procedimento:</b> ${r.procedure.replace(/\n/g, '<br>')}<br>
+                    <b>Tempo:</b> ${r.cookTime}<br>
+                    <b>Metodo:</b> ${r.method}<br>
+                    ${r.img?`<b>Immagine:</b> <a href="${r.img}" target="_blank">Link</a>`:""}
+                `;
+                document.getElementById('editRecipeBtn').disabled = false;
+                document.getElementById('deleteRecipeBtn').disabled = false;
             }
         }
 
+        function selectRecipeInAll(name) {
+             document.getElementById('allRecipesSelect').value = name;
+             displaySelectedRecipe();
+        }
+
         function insertNewRecipeFromAll() {
+            currentRecipeToEdit = null;
             openRecipeModal(null);
         }
 
@@ -796,9 +1224,8 @@
                 alert("Seleziona una ricetta prima di modificare.");
                 return;
             }
-            
-            currentRecipeToEdit = name; 
-            openRecipeModal(null); 
+            currentRecipeToEdit = name;
+            openRecipeModal(null);
         }
 
         function deleteRecipeFromAll() {
@@ -807,10 +1234,8 @@
                 alert("Seleziona una ricetta da eliminare.");
                 return;
             }
-
             if(confirm(`Sei sicuro di voler eliminare DEFINITIVAMENTE la ricetta '${name}' dal database? Verrà rimossa da tutti i giorni in cui è usata.`)) {
                 delete recipeDB[name];
-                
                 Object.keys(diary).forEach(date => {
                     MEALS.forEach(m => {
                         if(diary[date][m] && diary[date][m].recipe === name){
@@ -818,55 +1243,112 @@
                         }
                     });
                 });
-
                 autoSaveKawaii();
+                // Ricarica la vista e applica il filtro corrente
                 showAllRecipes();
+                filterAllRecipes(); // Chiama la versione senza argomenti
                 renderDiary();
             }
         }
 
-        function closeAllRecipesModal(){ 
-            document.getElementById('allRecipesModal').style.display='none'; 
+        function closeAllRecipesModal(){
+            document.getElementById('allRecipesModal').style.display='none';
             renderDiary();
         }
-        
-        // --- Tabelle nutrizionali
+
+        // --- Tabelle nutrizionali (funzionalità categorizzata mantenuta)
         function showNutritionModal(){
-            const table = document.getElementById('nutritionTable');
-            table.innerHTML = `<tr><th>Alimento</th><th>Kcal/100g</th><th>Carbs</th><th>Proteine</th><th>Grassi</th><th>Azioni</th></tr>`;
-            foodDB.forEach((f,i)=>{
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${f.name}</td>
-                                <td>${f.kcal100}</td>
-                                <td>${f.carbs100}</td>
-                                <td>${f.protein100}</td>
-                                <td>${f.fat100}</td>
-                                <td>
-                                  <button onclick="editFoodTable(${i})">✏️</button>
-                                  <button onclick="removeFoodTable(${i})">🗑️</button>
-                                </td>`;
-                table.appendChild(tr);
+            const container = document.getElementById('nutritionContent');
+            container.innerHTML = '';
+
+            // 1. Gruppa gli alimenti per categoria
+            const groupedFood = {};
+            FOOD_CATEGORIES.forEach(cat => {
+                groupedFood[cat] = [];
             });
+            foodDB.forEach(food => {
+                const cat = food.category && FOOD_CATEGORIES.includes(food.category) ? food.category : "Altro";
+                groupedFood[cat].push(food);
+            });
+
+            // 2. Renderizza le categorie con le sottocartelle
+            let htmlContent = '';
+            FOOD_CATEGORIES.forEach(category => {
+                const list = groupedFood[category];
+                if (list && list.length > 0) {
+                    htmlContent += `<div class="category-heading">${category} (${list.length})</div>`;
+                    htmlContent += `<div class="item-list">`;
+                    list.sort((a, b) => a.name.localeCompare(b.name)).forEach((f, i) => {
+                        // Trova l'indice corretto nell'array flat foodDB per le azioni
+                        const actualIndex = foodDB.findIndex(item => item.name === f.name);
+                        htmlContent += `
+                            <div class="item-in-list">
+                                <div class="nutrition-item-info">
+                                    <b>${f.name}</b><br>
+                                    Kcal: ${f.kcal100} | Carbs: ${f.carbs100} | Prot: ${f.protein100} | Grassi: ${f.fat100}
+                                </div>
+                                <div>
+                                    <button onclick="editFoodTable(${actualIndex})">✏️</button>
+                                    <button onclick="removeFoodTable(${actualIndex})">🗑️</button>
+                                </div>
+                            </div>`;
+                    });
+                    htmlContent += `</div>`;
+                }
+            });
+
+            container.innerHTML = htmlContent;
             document.getElementById('nutritionModal').style.display='flex';
+        }
+
+        function closeNutritionModal(){
+            document.getElementById('nutritionModal').style.display='none';
         }
 
         function editFoodTable(i){
             const f = foodDB[i];
-            const name = prompt("Nome alimento:", f.name);
-            if(!name) return;
-            const kcal = parseFloat(prompt("Kcal/100g:", f.kcal100));
-            const carbs = parseFloat(prompt("Carbs/100g:", f.carbs100));
-            const protein = parseFloat(prompt("Proteine/100g:", f.protein100));
-            const fat = parseFloat(prompt("Grassi/100g:", f.fat100));
-            foodDB[i] = {name, kcal100:kcal, carbs100:carbs, protein100:protein, fat100:fat, img:f.img};
+            const nameInput = prompt("Nuovo Nome alimento:", f.name);
+            if(!nameInput) return;
+            const name = nameInput.trim().charAt(0).toUpperCase() + nameInput.trim().slice(1).toLowerCase();
+            const kcal = parseFloat(prompt("Nuove Kcal/100g:", f.kcal100));
+            const carbs = parseFloat(prompt("Nuovi Carbs/100g:", f.carbs100));
+            const protein = parseFloat(prompt("Nuove Proteine/100g:", f.protein100));
+            const fat = parseFloat(prompt("Nuovi Grassi/100g:", f.fat100));
+            const categoryPrompt = `Scegli una categoria:\n- ${FOOD_CATEGORIES.join('\n- ')}`;
+            let category = prompt(categoryPrompt, f.category);
+
+            if (isNaN(kcal) || isNaN(carbs) || isNaN(protein) || isNaN(fat)) {
+                alert("Valori nutrizionali non validi. Riprova.");
+                return;
+            }
+
+            if (!category || !FOOD_CATEGORIES.includes(category)) {
+                category = "Altro";
+            }
+
+            if (name !== f.name) {
+                 Object.keys(diary).forEach(date => {
+                    MEALS.forEach(m => {
+                        if(diary[date][m]){
+                            diary[date][m].forEach(item => {
+                                if(item.name === f.name) {
+                                    item.name = name;
+                                }
+                            });
+                        }
+                    });
+                });
+            }
+
+            foodDB[i] = { name, kcal100:kcal, carbs100:carbs, protein100:protein, fat100:fat, img:"", category };
             updateFoodList();
             showNutritionModal();
-            autoSaveKawaii(); 
+            renderDiary(); 
+            autoSaveKawaii();
         }
 
         function removeFoodTable(i){
-            if(confirm("Vuoi eliminare questo alimento?")){
-                // Rimuovi anche da tutti i pasti nel diario
+            if(confirm(`Sei sicuro di voler eliminare DEFINITIVAMENTE l'alimento '${foodDB[i].name}' dal database e da tutti i pasti?`)) {
                 const foodName = foodDB[i].name;
                 Object.keys(diary).forEach(date => {
                     MEALS.forEach(m => {
@@ -878,127 +1360,37 @@
                 foodDB.splice(i,1);
                 updateFoodList();
                 showNutritionModal();
-                renderDiary(); // Ricarica la vista per rimuovere il cibo eliminato
-                autoSaveKawaii(); 
+                renderDiary(); 
+                autoSaveKawaii();
             }
         }
+
         function addNewFood(){
             const nameInput = prompt("Nome alimento:");
             if(!nameInput) return;
-            
             const name = nameInput.trim().charAt(0).toUpperCase() + nameInput.trim().slice(1).toLowerCase();
-            
             const kcal = parseFloat(prompt("Kcal/100g:"));
             const carbs = parseFloat(prompt("Carbs/100g:"));
             const protein = parseFloat(prompt("Proteine/100g:"));
             const fat = parseFloat(prompt("Grassi/100g:"));
+            const categoryPrompt = `Scegli una categoria:\n- ${FOOD_CATEGORIES.join('\n- ')}`;
+            let category = prompt(categoryPrompt);
+
             if (isNaN(kcal) || isNaN(carbs) || isNaN(protein) || isNaN(fat)) {
                 alert("Valori nutrizionali non validi. Riprova.");
                 return;
             }
-            foodDB.push({name,kcal100:kcal,carbs100:carbs,protein100:protein,fat100:fat,img:""});
-            updateFoodList();
-            showNutritionModal();
-            autoSaveKawaii(); 
-            alert("🍎 Nuovo alimento salvato nel database!");
-        }
 
-        function closeNutritionModal(){
-            document.getElementById('nutritionModal').style.display='none';
-            updateFoodList();
-            renderDiary(); 
-        }
-
-        // --- Gestione data
-        function changeDay(date){
-            currentDate = date;
-            initDiaryForDate(currentDate);
-            renderDiary();
-        }
-
-        // --- Sincronizzazione JSONBin
-        function saveSyncJSONBin() {
-            initDiaryForDate(currentDate);
-            const allData = { diary, foodDB, recipeDB, savedAt: new Date().toISOString() };
-            
-            try {
-              localStorage.setItem("kawaiiAllData", JSON.stringify(allData));
-            } catch (e) {
-              console.warn("Impossibile salvare localmente:", e);
+            if (!category || !FOOD_CATEGORIES.includes(category)) {
+                category = "Altro";
             }
-            
-            fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
-                method: "PUT",
-                headers: {
-                  "Content-Type": "application/json",
-                  "X-Master-Key": JSONBIN_MASTER_KEY 
-                },
-                body: JSON.stringify(allData)
-            })
-            .then(async (res) => {
-                const text = await res.text();
-                if (!res.ok) {
-                  throw new Error(`HTTP ${res.status}: ${text}`);
-                }
-                alert("✅ Dati sincronizzati con successo su Cloud!");
-                console.log("✅ JSONBin PUT OK:", text);
-            })
-            .catch((err) => {
-                console.error("❌ Errore sincronizzazione Cloud (PUT):", err);
-                alert("⚠️ Non è stato possibile sincronizzare su Cloud. Dati salvati solo localmente come fallback. Controlla le tue chiavi JSONBin!");
-            });
+
+            foodDB.push({ name, kcal100:kcal, carbs100:carbs, protein100:protein, fat100:fat, img:"", category });
+            updateFoodList();
+            showNutritionModal(); 
+            autoSaveKawaii();
         }
 
-        function loadSyncJSONBin(){
-            fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-                method: "GET",
-                headers: {
-                    "X-Access-Key": JSONBIN_READ_KEY 
-                },
-                mode: "cors"
-            })
-            .then(res => {
-                if(!res.ok) throw new Error("HTTP " + res.status);
-                return res.json();
-            })
-            .then(data => {
-                if(!data || !data.record) throw new Error("Record Cloud vuoto");
-                const rec = data.record;
-                diary = rec.diary || {};
-                foodDB = rec.foodDB || [];
-                recipeDB = rec.recipeDB || {};
-                
-                initDiaryForDate(currentDate);
-                updateFoodList();
-                renderDiary();
-                
-                autoSaveKawaii(); 
-                alert("📂 Dati caricati da Cloud!");
-            })
-            .catch(err => {
-                console.warn("❌ Errore caricamento Cloud (GET):", err);
-                
-                try {
-                    const data = localStorage.getItem("kawaiiAllData");
-                    if(data){
-                        const all = JSON.parse(data);
-                        diary = all.diary || {};
-                        foodDB = all.foodDB || [];
-                        recipeDB = all.recipeDB || {};
-                        
-                        initDiaryForDate(currentDate);
-                        updateFoodList();
-                        renderDiary();
-                        alert("📂 Cloud non raggiungibile — caricati i dati locali come fallback. Controlla la tua connessione!");
-                    } else {
-                        alert("❌ Cloud non raggiungibile e non ci sono dati locali salvati.");
-                    }
-                } catch(e){
-                    console.error("Errore fallback locale:", e);
-                    alert("❌ Errore nel caricamento: controlla console e connessione.");
-                }
-            });
-        }
 
         // --- Avvio
         document.addEventListener('DOMContentLoaded', () => {
