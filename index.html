@@ -386,8 +386,8 @@
         // Categorie principali per il raggruppamento
         const MAIN_RECIPE_TYPES = Object.keys(RECIPE_CATEGORY_MAP); 
 
-        // CATEGORIE ALIMENTI
-        const FOOD_CATEGORIES = ["Cereali/Amidi", "Frutta", "Verdura", "Proteine Bianche", "Proteine Rosse", "Grassi/Oli", "Altro"];
+       // CATEGORIE ALIMENTI
+const FOOD_CATEGORIES = ["Cereali", "Carne Bianca", "Carne Rossa", "Affettati", "Albume", "Formaggi", "Grassi", "Yogurt", "Dessert", "Frutta", "Verdura", "Altro"];
 
         const activities = [
             {name:"Tapis roulant", kcalPerMin:10},
@@ -606,8 +606,12 @@
             updateDayTotals();
         }
 
-        function updateDayTotals(){
+function updateDayTotals(){
             let totalKcal=0, totalCarbs=0, totalProt=0, totalFat=0;
+            
+            // Nuove variabili per il totale escludendo lo schema predefinito
+            let customKcal=0, customCarbs=0, customProt=0, customFat=0; 
+            
             MEALS.forEach(meal=>{
                 if (diary[currentDate][meal]) {
                     diary[currentDate][meal].forEach(f=>{
@@ -615,11 +619,31 @@
                         const carbs = f.carbs100*f.quantity/100;
                         const prot = f.protein100*f.quantity/100;
                         const fat = f.fat100*f.quantity/100;
-                        totalKcal += kcal; totalCarbs += carbs; totalProt += prot; totalFat += fat;
+                        
+                        // Totale Completo
+                        totalKcal += kcal; 
+                        totalCarbs += carbs; 
+                        totalProt += prot; 
+                        totalFat += fat;
+                        
+                        // Totale Personalizzato (esclude isDefault: true)
+                        if (!f.isDefault) {
+                            customKcal += kcal;
+                            customCarbs += carbs;
+                            customProt += prot;
+                            customFat += fat;
+                        }
                     });
                 }
             });
-            document.getElementById('totals-day').innerHTML = `Totale Giornaliero: 🔥 ${totalKcal.toFixed(1)} kcal | 🍞 ${totalCarbs.toFixed(1)} g | 🥚 ${totalProt.toFixed(1)} g | 🥑 ${totalFat.toFixed(1)} g`;
+            
+            // Totale Giornaliero Completo
+            let htmlContent = `Totale Giornaliero: 🔥 ${totalKcal.toFixed(1)} kcal | 🍞 ${totalCarbs.toFixed(1)} g | 🥚 ${totalProt.toFixed(1)} g | 🥑 ${totalFat.toFixed(1)} g`;
+            
+            // Totale Giornaliero Escludendo Schema Predefinito (il tuo "Totale Reale")
+            htmlContent += `<br><span style="color: var(--kawaii-main-button);">Totale Alimenti Personalizzati:</span> <b>🔥 ${customKcal.toFixed(1)} kcal | 🍞 ${customCarbs.toFixed(1)} g | 🥚 ${customProt.toFixed(1)} g | 🥑 ${customFat.toFixed(1)} g</b>`;
+
+            document.getElementById('totals-day').innerHTML = htmlContent;
         }
 
         function changeDay(newDate){
@@ -1306,46 +1330,69 @@
         }
 
         function editFoodTable(i){
-            const f = foodDB[i];
-            const nameInput = prompt("Nuovo Nome alimento:", f.name);
-            if(!nameInput) return;
-            const name = nameInput.trim().charAt(0).toUpperCase() + nameInput.trim().slice(1).toLowerCase();
-            const kcal = parseFloat(prompt("Nuove Kcal/100g:", f.kcal100));
-            const carbs = parseFloat(prompt("Nuovi Carbs/100g:", f.carbs100));
-            const protein = parseFloat(prompt("Nuove Proteine/100g:", f.protein100));
-            const fat = parseFloat(prompt("Nuovi Grassi/100g:", f.fat100));
-            const categoryPrompt = `Scegli una categoria:\n- ${FOOD_CATEGORIES.join('\n- ')}`;
-            let category = prompt(categoryPrompt, f.category);
+    const f = foodDB[i];
+    const nameInput = prompt("Nuovo Nome alimento:", f.name);
+    if(!nameInput) return;
+    const name = nameInput.trim().charAt(0).toUpperCase() + nameInput.trim().slice(1).toLowerCase();
+    const kcal = parseFloat(prompt("Nuove Kcal/100g:", f.kcal100));
+    const carbs = parseFloat(prompt("Nuovi Carbs/100g:", f.carbs100));
+    const protein = parseFloat(prompt("Nuove Proteine/100g:", f.protein100));
+    const fat = parseFloat(prompt("Nuovi Grassi/100g:", f.fat100));
+    
+    if (isNaN(kcal) || isNaN(carbs) || isNaN(protein) || isNaN(fat)) {
+        alert("Valori nutrizionali non validi. Riprova.");
+        return;
+    }
 
-            if (isNaN(kcal) || isNaN(carbs) || isNaN(protein) || isNaN(fat)) {
-                alert("Valori nutrizionali non validi. Riprova.");
-                return;
-            }
+    // --- NUOVA LOGICA DI SELEZIONE DELLA CATEGORIA TRAMITE ELENCO NUMERATO ---
+    let category = f.category || "Altro"; // Mantiene il valore attuale
+    
+    // Trova l'indice predefinito (per mostrare l'opzione corrente)
+    const currentCategoryIndex = FOOD_CATEGORIES.indexOf(category);
+    
+    // Crea un elenco numerato delle categorie per il prompt
+    const categoryOptions = FOOD_CATEGORIES.map((cat, index) => {
+        const isCurrent = index === currentCategoryIndex;
+        return `${index + 1}. ${cat}${isCurrent ? ' (Attuale)' : ''}`;
+    }).join('\n');
+    
+    const categoryPrompt = `Scegli la categoria inserendo il NUMERO corrispondente:\n\n${categoryOptions}\n\n(Lasciare vuoto per mantenere "${category}")`;
+    
+    const choice = prompt(categoryPrompt);
+    
+    if (choice) { // Solo se è stato inserito un valore
+        const choiceIndex = parseInt(choice) - 1; 
+        
+        if (!isNaN(choiceIndex) && choiceIndex >= 0 && choiceIndex < FOOD_CATEGORIES.length) {
+            category = FOOD_CATEGORIES[choiceIndex];
+        } else {
+             alert("Selezione di categoria non valida. Categoria mantenuta.");
+        }
+    }
+    // --- FINE NUOVA LOGICA ---
 
-            if (!category || !FOOD_CATEGORIES.includes(category)) {
-                category = "Altro";
-            }
-
-            if (name !== f.name) {
-                 Object.keys(diary).forEach(date => {
-                    MEALS.forEach(m => {
-                        if(diary[date][m]){
-                            diary[date][m].forEach(item => {
-                                if(item.name === f.name) {
-                                    item.name = name;
-                                }
-                            });
+    if (name !== f.name) {
+         Object.keys(diary).forEach(date => {
+            MEALS.forEach(m => {
+                if(diary[date][m]){
+                    diary[date][m].forEach(item => {
+                        if(item.name === f.name) {
+                            item.name = name;
                         }
                     });
-                });
-            }
+                }
+            });
+        });
+    }
 
-            foodDB[i] = { name, kcal100:kcal, carbs100:carbs, protein100:protein, fat100:fat, img:"", category };
-            updateFoodList();
-            showNutritionModal();
-            renderDiary(); 
-            autoSaveKawaii();
-        }
+    foodDB[i] = { name, kcal100:kcal, carbs100:carbs, protein100:protein, fat100:fat, img:"", category };
+    updateFoodList();
+    showNutritionModal();
+    renderDiary(); 
+    autoSaveKawaii();
+}
+
+
 
         function removeFoodTable(i){
             if(confirm(`Sei sicuro di voler eliminare DEFINITIVAMENTE l'alimento '${foodDB[i].name}' dal database e da tutti i pasti?`)) {
@@ -1365,31 +1412,46 @@
             }
         }
 
-        function addNewFood(){
-            const nameInput = prompt("Nome alimento:");
-            if(!nameInput) return;
-            const name = nameInput.trim().charAt(0).toUpperCase() + nameInput.trim().slice(1).toLowerCase();
-            const kcal = parseFloat(prompt("Kcal/100g:"));
-            const carbs = parseFloat(prompt("Carbs/100g:"));
-            const protein = parseFloat(prompt("Proteine/100g:"));
-            const fat = parseFloat(prompt("Grassi/100g:"));
-            const categoryPrompt = `Scegli una categoria:\n- ${FOOD_CATEGORIES.join('\n- ')}`;
-            let category = prompt(categoryPrompt);
 
-            if (isNaN(kcal) || isNaN(carbs) || isNaN(protein) || isNaN(fat)) {
-                alert("Valori nutrizionali non validi. Riprova.");
-                return;
-            }
 
-            if (!category || !FOOD_CATEGORIES.includes(category)) {
-                category = "Altro";
-            }
+    function addNewFood(){
+    const nameInput = prompt("Nome alimento:");
+    if(!nameInput) return;
+    const name = nameInput.trim().charAt(0).toUpperCase() + nameInput.trim().slice(1).toLowerCase();
+    
+    const kcal = parseFloat(prompt("Kcal/100g:"));
+    const carbs = parseFloat(prompt("Carbs/100g:"));
+    const protein = parseFloat(prompt("Proteine/100g:"));
+    const fat = parseFloat(prompt("Grassi/100g:"));
+    
+    if (isNaN(kcal) || isNaN(carbs) || isNaN(protein) || isNaN(fat)) {
+        alert("Valori nutrizionali non validi. Riprova.");
+        return;
+    }
 
-            foodDB.push({ name, kcal100:kcal, carbs100:carbs, protein100:protein, fat100:fat, img:"", category });
-            updateFoodList();
-            showNutritionModal(); 
-            autoSaveKawaii();
+    // --- NUOVA LOGICA DI SELEZIONE DELLA CATEGORIA TRAMITE ELENCO NUMERATO ---
+    let category = "Altro"; // Valore predefinito
+
+    // Crea un elenco numerato delle categorie per il prompt
+    const categoryOptions = FOOD_CATEGORIES.map((cat, index) => `${index + 1}. ${cat}`).join('\n');
+    const categoryPrompt = `Scegli la categoria inserendo il NUMERO corrispondente:\n\n${categoryOptions}\n\n(Premendo Annulla o inserendo un valore non valido verrà usata la categoria "Altro")`;
+    
+    const choice = prompt(categoryPrompt);
+    
+    if (choice) {
+        const choiceIndex = parseInt(choice) - 1; // Conversione da numero (base 1) a indice (base 0)
+        
+        if (!isNaN(choiceIndex) && choiceIndex >= 0 && choiceIndex < FOOD_CATEGORIES.length) {
+            category = FOOD_CATEGORIES[choiceIndex];
         }
+    }
+    // --- FINE NUOVA LOGICA ---
+
+    foodDB.push({ name, kcal100:kcal, carbs100:carbs, protein100:protein, fat100:fat, img:"", category });
+    updateFoodList();
+    showNutritionModal(); 
+    autoSaveKawaii();
+}
 
 
         // --- Avvio
@@ -1415,3 +1477,4 @@
     </script>
 </body>
 </html>
+
